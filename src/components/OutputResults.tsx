@@ -41,6 +41,7 @@ export const OutputResults: React.FC<OutputResultsProps> = ({
       videoUrl: sourceVideo.url,
       aspectRatio: "9:16",
       tags: ["High Retension", "Strong Hook", "Tiktok Viral"],
+      appliedEffects: ["Kinetic Subtitles", "Zoom-Punch", "Hologram UI", "SFX Whoosh", "Pop 3D Assets"],
     },
     {
       id: "clip-2",
@@ -54,6 +55,7 @@ export const OutputResults: React.FC<OutputResultsProps> = ({
       videoUrl: sourceVideo.url,
       aspectRatio: "9:16",
       tags: ["Value Content", "Save & Share", "Reels Top"],
+      appliedEffects: ["Flash-Cut", "Camera Shake", "Smart Ducking", "3D Emoji Cash"],
     },
     {
       id: "clip-3",
@@ -67,6 +69,7 @@ export const OutputResults: React.FC<OutputResultsProps> = ({
       videoUrl: sourceVideo.url,
       aspectRatio: "9:16",
       tags: ["High Conversion", "Follow Call", "Tiktok Shop"],
+      appliedEffects: ["Whip Pan", "Camcorder HUD", "Korean Glow", "Bass Drop SFX"],
     },
   ];
 
@@ -212,6 +215,18 @@ Biến video dài thành nội dung viral triệu view chỉ với một cú nh�
                       className="rounded bg-panel border border-zinc-800 px-1.5 py-0.5 text-[9px] font-semibold text-zinc-400"
                     >
                       #{tag}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Applied VFX & SFX Badges */}
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {clip.appliedEffects.map((eff) => (
+                    <span
+                      key={eff}
+                      className="rounded bg-brand/10 border border-brand/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-300"
+                    >
+                      ⚡ {eff}
                     </span>
                   ))}
                 </div>

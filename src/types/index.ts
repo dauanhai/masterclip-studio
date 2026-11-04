@@ -1,5 +1,28 @@
 export type AspectRatio = "9:16" | "16:9" | "1:1" | "4:5";
 
+export type TransitionType = 
+  | "zoom-punch" 
+  | "flash-cut" 
+  | "glitch" 
+  | "whip-pan" 
+  | "film-dissolve";
+
+export type VfxType = 
+  | "shake" 
+  | "flash" 
+  | "korean-glow" 
+  | "film-grain" 
+  | "rgb-split";
+
+export interface Asset3DTrigger {
+  id: string;
+  triggerWord: string;
+  emoji: string;
+  label: string;
+  color: string;
+  sfx: "pop" | "cash" | "ding" | "bassdrop" | "whoosh";
+}
+
 export interface Preset {
   id: string;
   name: string;
@@ -15,6 +38,13 @@ export interface Preset {
   bgmMood: "trending" | "chill" | "upbeat" | "dramatic" | "none";
   sampleHook: string;
   tags: string[];
+  // New features
+  recommendedTransition: TransitionType;
+  recommendedVfx: VfxType[];
+  hologramDefault: boolean;
+  highlightKeywordColor: "yellow" | "red" | "green" | "magenta";
+  keyWords: string[];
+  activeAssets3D: Asset3DTrigger[];
 }
 
 export interface VideoSource {
@@ -29,11 +59,21 @@ export interface VideoSource {
 export interface AdvancedSettingsConfig {
   aspectRatio: AspectRatio;
   safeZone: boolean;
+  hologramUI: boolean;
+  transition: TransitionType;
+  vfxShake: boolean;
+  vfxFlash: boolean;
   skinGlow: boolean;
+  vfxRgbGlitch: boolean;
+  vfxFilmGrain: boolean;
   silenceThreshold: number; // in seconds
   speed: number;
   subtitlesEnabled: boolean;
   subtitleStyle: "neon" | "karaoke" | "box" | "minimal";
+  highlightKeywordColor: "yellow" | "red" | "green" | "magenta";
+  zoomKeywords: boolean;
+  pop3dAssets: boolean;
+  sfxEnabled: boolean;
   musicMood: "trending" | "chill" | "upbeat" | "dramatic" | "none";
   musicVolume: number; // 0 - 100
   duckingLevel: number; // % volume reduction when speech detected
@@ -52,6 +92,7 @@ export interface ShortClip {
   videoUrl: string;
   aspectRatio: AspectRatio;
   tags: string[];
+  appliedEffects: string[];
 }
 
 export interface ProjectHistoryItem {

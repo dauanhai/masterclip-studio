@@ -42,12 +42,21 @@ body {
   box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);
 }
 
+/* Neon Glow Colors */
 .neon-glow-magenta {
-  text-shadow: 0 0 10px #FF007F, 0 0 20px #FF007F;
+  text-shadow: 0 0 10px #FF007F, 0 0 22px #FF007F, 0 0 35px #FF007F;
 }
 
 .neon-glow-yellow {
-  text-shadow: 0 0 10px #FFE600, 0 0 20px #FFE600;
+  text-shadow: 0 0 10px #FFE600, 0 0 22px #FFE600, 0 0 35px #FFE600;
+}
+
+.neon-glow-green {
+  text-shadow: 0 0 10px #00FF66, 0 0 22px #00FF66, 0 0 35px #00FF66;
+}
+
+.neon-glow-red {
+  text-shadow: 0 0 10px #FF2E63, 0 0 22px #FF2E63, 0 0 35px #FF2E63;
 }
 
 /* App Background Grid Effect */
@@ -78,4 +87,60 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* VFX: Camera Shake */
+@keyframes camera-shake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-3px, 2px) rotate(-0.5deg); }
+  40% { transform: translate(3px, -2px) rotate(0.5deg); }
+  60% { transform: translate(-2px, -2px) rotate(-0.3deg); }
+  80% { transform: translate(2px, 1px) rotate(0.3deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.vfx-shake-active {
+  animation: camera-shake 0.35s ease-in-out infinite;
+}
+
+/* VFX: Flash Hit */
+@keyframes flash-hit {
+  0% { opacity: 0; }
+  15% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+.vfx-flash-overlay {
+  animation: flash-hit 0.4s ease-out;
+}
+
+/* VFX: Film Grain Overlay */
+.vfx-film-grain {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 0);
+  background-size: 3px 3px;
+  pointer-events: none;
+}
+
+/* 3D Asset Pop / Bounce animation */
+@keyframes asset-pop-bounce {
+  0% { transform: scale(0.2) translateY(20px); opacity: 0; }
+  60% { transform: scale(1.25) translateY(-6px); opacity: 1; }
+  80% { transform: scale(0.95) translateY(2px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.animate-asset-pop {
+  animation: asset-pop-bounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Hologram Cyber Grid Lines */
+.hologram-scanline {
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 240, 255, 0.07) 51%,
+    transparent 52%
+  );
+  background-size: 100% 6px;
+  pointer-events: none;
 }

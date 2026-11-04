@@ -34,7 +34,8 @@ import {
   AdvancedSettingsConfig, 
   Preset, 
   VideoSource, 
-  ProjectHistoryItem 
+  ProjectHistoryItem,
+  TransitionType 
 } from "./types";
 import { 
   Sparkles, 
@@ -42,10 +43,8 @@ import {
   Check, 
   X, 
   ArrowRight, 
-  Play, 
-  ShieldCheck, 
   Zap, 
-  Heart 
+  Wand2 
 } from "lucide-react";
 
 export function App() {
@@ -61,12 +60,22 @@ export function App() {
   const [settings, setSettings] = useState<AdvancedSettingsConfig>({
     aspectRatio: "9:16",
     safeZone: true,
-    skinGlow: true,
+    hologramUI: true,
+    transition: "zoom-punch",
+    vfxShake: true,
+    vfxFlash: true,
+    skinGlow: false,
+    vfxRgbGlitch: true,
+    vfxFilmGrain: false,
     silenceThreshold: 0.3,
-    speed: 1.12,
+    speed: 1.18,
     subtitlesEnabled: true,
-    subtitleStyle: "karaoke",
-    musicMood: "chill",
+    subtitleStyle: "neon",
+    highlightKeywordColor: "yellow",
+    zoomKeywords: true,
+    pop3dAssets: true,
+    sfxEnabled: true,
+    musicMood: "upbeat",
     musicVolume: 35,
     duckingLevel: 80,
     hookOpening: true,
@@ -85,8 +94,14 @@ export function App() {
       speed: preset.speed,
       subtitleStyle: preset.subtitleStyle,
       musicMood: preset.bgmMood,
+      transition: preset.recommendedTransition,
+      hologramUI: preset.hologramDefault,
+      highlightKeywordColor: preset.highlightKeywordColor,
+      vfxShake: preset.recommendedVfx.includes("shake"),
+      vfxFlash: preset.recommendedVfx.includes("flash"),
+      vfxFilmGrain: preset.recommendedVfx.includes("film-grain"),
     }));
-    showToast(`Đã áp dụng Preset "${preset.name}"`);
+    showToast(`Đã áp dụng Preset "${preset.name}" kèm VFX & SFX`);
   };
 
   const handleStartRender = () => {
@@ -100,7 +115,7 @@ export function App() {
   const handleCompleteRender = () => {
     setIsProcessing(false);
     setHasRenderedOutput(true);
-    showToast("Chúc mừng! 3 video Short viral đã sẵn sàng tải về.");
+    showToast("Chúc mừng! 3 video Short viral hoàn chỉnh đã sẵn sàng tải về.");
   };
 
   const handleOpenHistoryProject = (proj: ProjectHistoryItem) => {
@@ -175,9 +190,11 @@ export function App() {
                 <div className="rounded-2xl border border-zinc-800 bg-card/60 p-4 shadow-xl backdrop-blur-sm">
                   <div className="flex items-center justify-between mb-3 px-1">
                     <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                      <Sparkles className="size-3.5 text-brand" /> Xem Trước 9:16 Thời Gian Thực
+                      <Sparkles className="size-3.5 text-brand" /> Xem Trước 9:16 Kinetic Subtitles
                     </span>
-                    <span className="text-[10px] text-zinc-500">Mô phỏng màn hình smartphone</span>
+                    <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                      <Zap className="size-3" /> VFX & SFX Bật
+                    </span>
                   </div>
 
                   <VideoPreviewPlayer
@@ -187,6 +204,13 @@ export function App() {
                     onChangeAspectRatio={setAspectRatio}
                     safeZone={safeZone}
                     onToggleSafeZone={() => setSafeZone(!safeZone)}
+                    hologramUI={settings.hologramUI}
+                    onToggleHologramUI={() => setSettings((s) => ({ ...s, hologramUI: !s.hologramUI }))}
+                    vfxShake={settings.vfxShake}
+                    highlightColor={settings.highlightKeywordColor}
+                    pop3dAssets={settings.pop3dAssets}
+                    sfxEnabled={settings.sfxEnabled}
+                    transition={settings.transition}
                   />
                 </div>
               </div>
@@ -208,19 +232,18 @@ export function App() {
             <div className="mx-auto max-w-4xl">
               <div className="text-center mb-6">
                 <h3 className="text-lg font-extrabold text-white">
-                  Khám Phá Các Phong Cách Preset Short Thịnh Hành
+                  Khám Phá Các Phong Cách Preset Short Thịnh Hành (Tích Hợp VFX & SFX)
                 </h3>
                 <p className="text-xs text-zinc-400 mt-1">
-                  Được nghiên cứu và cấu hình dựa trên hàng trăm clip triệu view trên TikTok & Reels
+                  Chữ hiện từng từ, từ khóa phóng to đổi màu, Hologram UI và Sticker 3D nảy theo giọng nói
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {PRESETS.slice(0, 3).map((p) => (
+                {PRESETS.map((p) => (
                   <div
                     key={p.id}
                     onClick={() => {
-                      // Load sample 1 and select preset
                       setCurrentVideo({
                         id: "sample-1",
                         name: "Video mẫu — " + p.name,
@@ -275,16 +298,12 @@ export function App() {
           <div className="flex items-center gap-4 text-zinc-400">
             <span className="inline-flex items-center gap-1.5 text-emerald-400">
               <span className="size-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Sẵn sàng deploy Vercel & GitHub
+              Đầy đủ Transitions, Kinetic Subtitles, VFX & SFX
             </span>
             <span>•</span>
             <span className="hover:text-white cursor-pointer" onClick={() => setShowPricingModal(true)}>
               Bảng giá VIP
             </span>
-            <span>•</span>
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-white">
-              GitHub Repo
-            </a>
           </div>
         </div>
       </footer>
@@ -322,7 +341,6 @@ export function App() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Starter */}
               <div className="rounded-2xl border border-zinc-800 bg-panel/60 p-5">
                 <h4 className="font-bold text-white text-sm">Gói Miễn Phí (Free Test)</h4>
                 <div className="text-2xl font-black text-white my-2">0đ <span className="text-xs text-zinc-500 font-normal">/ mãi mãi</span></div>
@@ -339,7 +357,6 @@ export function App() {
                 </button>
               </div>
 
-              {/* VIP Pro */}
               <div className="relative rounded-2xl border-2 border-brand bg-panel p-5 shadow-xl shadow-brand/10">
                 <div className="absolute -top-3 right-4 rounded-full bg-brand px-2.5 py-0.5 text-[9px] font-black uppercase text-black">
                   Khuyên dùng
@@ -350,13 +367,13 @@ export function App() {
                 <div className="text-2xl font-black text-white my-2">199.000đ <span className="text-xs text-zinc-500 font-normal">/ tháng</span></div>
                 <ul className="space-y-2 text-xs text-zinc-300 mb-6">
                   <li className="flex items-center gap-2"><Check className="size-3.5 text-brand" /> Xuất video KHÔNG GIỚI HẠN</li>
+                  <li className="flex items-center gap-2"><Check className="size-3.5 text-brand" /> Đầy đủ VFX, SFX & Hologram</li>
                   <li className="flex items-center gap-2"><Check className="size-3.5 text-brand" /> Độ phân giải 4K 60FPS sắc nét</li>
-                  <li className="flex items-center gap-2"><Check className="size-3.5 text-brand" /> Tự tải lên font chữ thương hiệu riêng</li>
                   <li className="flex items-center gap-2"><Check className="size-3.5 text-brand" /> Ưu tiên xử lý AI tốc độ cao gấp 3x</li>
                 </ul>
                 <button
                   onClick={() => {
-                    alert("Cảm ơn anh/chị! Tính năng thanh toán đã sẵn sàng kết nối cổng VNPAY/MoMo.");
+                    alert("Cảm ơn anh/chị! Tính năng thanh toán đã sẵn sàng.");
                     setShowPricingModal(false);
                   }}
                   className="w-full rounded-xl bg-gradient-to-r from-brand to-gold-400 py-2.5 text-xs font-bold text-black hover:brightness-110"
