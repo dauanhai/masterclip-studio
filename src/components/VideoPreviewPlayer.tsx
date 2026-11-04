@@ -16,15 +16,20 @@ import {
   Scan,
   Layers,
   Wand2,
-  Volume1
+  Volume1,
+  GraduationCap,
+  Film,
+  ExternalLink
 } from "lucide-react";
-import { AspectRatio, Preset, VideoSource, TransitionType } from "../types";
+import { AspectRatio, Preset, VideoSource, TransitionType, TranscriptSegment, BrollItem } from "../types";
 import { formatTime } from "../lib/utils";
 import { playSfx, SfxType } from "../lib/sfx";
 
 interface VideoPreviewPlayerProps {
   video: VideoSource;
   preset: Preset;
+  segments?: TranscriptSegment[];
+  brollList?: BrollItem[];
   aspectRatio: AspectRatio;
   onChangeAspectRatio: (ratio: AspectRatio) => void;
   safeZone: boolean;
@@ -32,15 +37,21 @@ interface VideoPreviewPlayerProps {
   hologramUI: boolean;
   onToggleHologramUI: () => void;
   vfxShake: boolean;
-  highlightColor: "yellow" | "red" | "green" | "magenta";
+  highlightColor: "yellow" | "red" | "green" | "magenta" | "rose";
   pop3dAssets: boolean;
   sfxEnabled: boolean;
   transition: TransitionType;
+  currentTime: number;
+  onTimeUpdate: (time: number) => void;
+  headlineTitle?: string;
+  showHeadlinePlate?: boolean;
 }
 
 export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
   video,
   preset,
+  segments = [],
+  brollList = [],
   aspectRatio,
   onChangeAspectRatio,
   safeZone,
@@ -52,21 +63,41 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
   pop3dAssets,
   sfxEnabled,
   transition,
+  currentTime,
+  onTimeUpdate,
+  headlineTitle = "CÔ HẠNH CHIA SẺ — GIẢI OAN DU HỌC",
+  showHeadlinePlate = true,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const brollVideoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(video.duration || 30);
+  const [duration, setDuration] = useState(video.duration || 30.4);
   const [isMuted, setIsMuted] = useState(false);
   const [activeWordIndex, setActiveWordIndex] = useState(0);
   const [isFlashing, setIsFlashing] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const [activeAsset, setActiveAsset] = useState<{ emoji: string; label: string; color: string } | null>(null);
 
-  // Split hook into individual words
-  const hookWords = preset.sampleHook.split(" ");
+  // Find the current active segment based on current playback time
+  const currentSegment = segments.find(
+    (s) => currentTime >= s.sourceStart && currentTime <= s.sourceEnd
+  );
 
-  // Trigger sound effect and visual transition test
+  // Find the active B-roll for current segment
+  const activeBroll = currentSegment?.brollId
+    ? brollList.find((b) => b.id === currentSegment.brollId)
+    : null;
+
+  const isBrollCutaway = currentSegment?.brollMode === "cutaway" && !!activeBroll;
+  const isBrollPip = currentSegment?.brollMode === "pip" && !!activeBroll;
+
+  // Punch zoom calculation (defaults to currentSegment.zoomScale or 1.0)
+  const currentScale = currentSegment?.zoomScale || 1.0;
+
+  // Split active sentence into words
+  const activeSentence = currentSegment?.text || preset.sampleHook;
+  const sentenceWords = activeSentence.split(/[\s\n]+/);
+
   const triggerTransitionPreview = () => {
     if (sfxEnabled) {
       playSfx("whoosh");
@@ -81,19 +112,17 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
     const el = videoRef.current;
     if (!el) return;
 
-    const handleTimeUpdate = () => {
-      setCurrentTime(el.currentTime);
+    const handleTime = () => {
+      onTimeUpdate(el.currentTime);
       
-      // Calculate active word index (changes smoothly every ~0.6s)
-      const totalWords = hookWords.length;
+      const totalWords = sentenceWords.length;
       const wordIdx = Math.floor((el.currentTime * 2.2) % totalWords);
       setActiveWordIndex(wordIdx);
 
-      const currentWord = hookWords[wordIdx]?.toUpperCase().replace(/[^A-Z0-9À-Ỹ]/gi, "");
+      const currentWord = sentenceWords[wordIdx]?.toUpperCase().replace(/[^A-Z0-9À-Ỹ]/gi, "");
 
-      // Check if current word matches any 3D asset triggers
       if (pop3dAssets) {
-        const matchedAsset = preset.activeAssets3D.find((asset) =>
+        const matchedAsset = preset.activeAssets3D?.find((asset) =>
           asset.triggerWord.includes(currentWord) || currentWord.includes(asset.triggerWord.split(" ")[0])
         );
 
@@ -112,11 +141,6 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
               setTimeout(() => setIsShaking(false), 350);
             }
           }
-        } else {
-          // Keep asset briefly then fade
-          if (activeAsset) {
-            setTimeout(() => setActiveAsset(null), 1200);
-          }
         }
       }
     };
@@ -129,24 +153,28 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
       setIsPlaying(false);
     };
 
-    el.addEventListener("timeupdate", handleTimeUpdate);
+    el.addEventListener("timeupdate", handleTime);
     el.addEventListener("loadedmetadata", handleLoadedMetadata);
     el.addEventListener("ended", handleEnded);
 
     return () => {
-      el.removeEventListener("timeupdate", handleTimeUpdate);
+      el.removeEventListener("timeupdate", handleTime);
       el.removeEventListener("loadedmetadata", handleLoadedMetadata);
       el.removeEventListener("ended", handleEnded);
     };
-  }, [video.url, hookWords, pop3dAssets, preset.activeAssets3D, sfxEnabled, vfxShake, activeAsset]);
+  }, [sentenceWords, pop3dAssets, preset.activeAssets3D, sfxEnabled, vfxShake, activeAsset, onTimeUpdate]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
     if (isPlaying) {
       videoRef.current.pause();
+      brollVideoRef.current?.pause();
       setIsPlaying(false);
     } else {
-      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      videoRef.current.play().then(() => {
+        setIsPlaying(true);
+        brollVideoRef.current?.play().catch(() => {});
+      }).catch(() => setIsPlaying(false));
       if (sfxEnabled) {
         playSfx("whoosh");
       }
@@ -156,44 +184,62 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
   const toggleMute = () => {
     if (!videoRef.current) return;
     videoRef.current.muted = !isMuted;
+    if (brollVideoRef.current) {
+      brollVideoRef.current.muted = true; // B-roll is always background
+    }
     setIsMuted(!isMuted);
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const time = parseFloat(e.target.value);
-    setCurrentTime(time);
+    onTimeUpdate(time);
     if (videoRef.current) {
       videoRef.current.currentTime = time;
     }
   };
 
-  // Color mapper for highlighted words
-  const getHighlightClass = (word: string, isCurrent: boolean) => {
-    const upper = word.toUpperCase().replace(/[^A-Z0-9À-Ỹ]/gi, "");
-    const isKeyword = preset.keyWords.some((k) => k.includes(upper) || upper.includes(k.split(" ")[0]));
-
-    if (isCurrent && isKeyword) {
-      switch (highlightColor) {
-        case "yellow":
-          return "text-[#FFE600] neon-glow-yellow scale-125 font-black bg-amber-500/25 px-1.5 py-0.5 rounded-lg border border-amber-400/50 shadow-lg";
-        case "red":
-          return "text-[#FF2E63] neon-glow-red scale-125 font-black bg-red-600/30 px-1.5 py-0.5 rounded-lg border border-red-500/50 shadow-lg";
-        case "green":
-          return "text-[#00FF66] neon-glow-green scale-125 font-black bg-emerald-600/30 px-1.5 py-0.5 rounded-lg border border-emerald-400/50 shadow-lg";
-        case "magenta":
-          return "text-[#FF007F] neon-glow-magenta scale-125 font-black bg-pink-600/30 px-1.5 py-0.5 rounded-lg border border-pink-400/50 shadow-lg";
-      }
+  // Subtitle highlight styling
+  const renderSubtitles = () => {
+    if (!currentSegment) {
+      return (
+        <div className="rounded-xl bg-[#42152A]/90 px-3.5 py-2 backdrop-blur-md border border-[#FF3B81]/40 shadow-2xl">
+          <div className="text-xs sm:text-sm font-black uppercase text-[#FFF7F8] tracking-tight">
+            {preset.sampleHook}
+          </div>
+        </div>
+      );
     }
 
-    if (isKeyword) {
-      return "text-amber-300 font-extrabold underline underline-offset-4 decoration-amber-400";
-    }
+    const highlightTarget = (currentSegment.highlight || "").toUpperCase();
 
-    if (isCurrent) {
-      return "text-white font-extrabold scale-110 bg-white/20 px-1 rounded";
-    }
+    // Split sentence by words
+    return (
+      <div className="rounded-xl bg-[#42152A]/90 px-3.5 py-2 backdrop-blur-md border border-[#FF3B81]/40 shadow-2xl max-w-[285px]">
+        <div className="text-xs sm:text-sm font-extrabold text-[#FFF7F8] uppercase tracking-tight flex flex-wrap justify-center items-center gap-1 leading-snug">
+          {sentenceWords.map((word, i) => {
+            const cleanWord = word.toUpperCase().replace(/[^A-Z0-9À-Ỹ]/gi, "");
+            const isHighlighted = highlightTarget.includes(cleanWord) && cleanWord.length > 1;
 
-    return "text-zinc-200 opacity-90";
+            if (isHighlighted) {
+              return (
+                <span
+                  key={i}
+                  className="bg-[#FF3B81] text-white px-1.5 py-0.5 rounded font-black scale-105 shadow-md inline-block transition-transform"
+                >
+                  {word}
+                </span>
+              );
+            }
+
+            return (
+              <span key={i} className="text-[#FFF7F8] drop-shadow">
+                {word}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -207,7 +253,7 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
               onClick={() => onChangeAspectRatio(ratio)}
               className={`rounded-md px-2 py-0.5 text-[11px] font-semibold transition-all ${
                 aspectRatio === ratio
-                  ? "bg-brand text-black shadow-sm"
+                  ? "bg-pink-500 text-white shadow-sm"
                   : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -217,7 +263,6 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Hologram UI Toggle */}
           <button
             onClick={onToggleHologramUI}
             className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-bold transition-all ${
@@ -231,12 +276,11 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
             <span>Hologram</span>
           </button>
 
-          {/* Safe Zone Toggle */}
           <button
             onClick={onToggleSafeZone}
             className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-bold transition-all ${
               safeZone
-                ? "border-brand/40 bg-brand/10 text-brand"
+                ? "border-pink-500/40 bg-pink-500/10 text-pink-400"
                 : "border-zinc-800 bg-panel text-zinc-400 hover:text-white"
             }`}
             title="Lưới an toàn tránh bị nút TikTok/Reels che chữ"
@@ -256,31 +300,109 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
         {/* Dynamic Island Notch */}
         <div className="absolute left-1/2 top-2 z-30 h-4 w-24 -translate-x-1/2 rounded-full bg-zinc-950 flex items-center justify-center">
           <div className="size-2 rounded-full bg-zinc-800/80 mr-4"></div>
-          <div className="size-1.5 rounded-full bg-blue-900/60"></div>
+          <div className="size-1.5 rounded-full bg-pink-900/60"></div>
         </div>
 
         {/* Video Screen Container */}
         <div className="relative aspect-[9/16] w-full overflow-hidden bg-zinc-950">
+          {/* Main Talking-Head Footage with Dynamic Punch-in Zoom Ladder */}
           <video
             ref={videoRef}
             src={video.url}
             loop
             playsInline
-            className={`size-full object-cover transition-all ${
-              preset.skinGlowEnabled ? "contrast-[1.05] brightness-[1.06] saturate-[1.12]" : ""
-            }`}
+            style={{
+              transform: `scale(${currentScale})`,
+              transformOrigin: "center center",
+            }}
+            className="size-full object-cover transition-transform duration-300 ease-out"
             onClick={togglePlay}
           />
+
+          {/* Cảnh Trám (B-Roll) Cutaway: Fullscreen 9:16 overlay with transition */}
+          {isBrollCutaway && activeBroll && (
+            <div className="absolute inset-0 z-18 overflow-hidden bg-black animate-fade-in">
+              <video
+                ref={brollVideoRef}
+                src={activeBroll.url}
+                loop
+                autoPlay
+                muted
+                playsInline
+                className="size-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/25 pointer-events-none" />
+              {/* B-roll Badge Pill */}
+              <div className="absolute top-16 left-3 z-20 flex items-center gap-1.5 rounded-full bg-emerald-600/90 backdrop-blur-md px-2.5 py-0.5 text-[9px] font-extrabold text-white shadow-lg animate-pulse">
+                <Film className="size-3" />
+                <span>CẢNH TRÁM TƯ LIỆU: {activeBroll.title.split(" ")[1] || "B-Roll"}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Cảnh Trám (B-Roll) Picture-in-Picture: Small corner video */}
+          {isBrollPip && activeBroll && (
+            <div className="absolute right-3 top-20 z-22 w-28 aspect-[9/14] overflow-hidden rounded-xl border-2 border-emerald-400 bg-black shadow-2xl animate-fade-in">
+              <video
+                src={activeBroll.url}
+                loop
+                autoPlay
+                muted
+                playsInline
+                className="size-full object-cover"
+              />
+              <div className="absolute bottom-1 inset-x-1 text-center bg-black/80 rounded px-1 text-[8px] font-extrabold text-emerald-300 truncate">
+                TƯ LIỆU
+              </div>
+            </div>
+          )}
 
           {/* Flash hit effect */}
           {isFlashing && (
             <div className="pointer-events-none absolute inset-0 z-30 bg-white vfx-flash-overlay" />
           )}
 
+          {/* Top Headline Plate (Chuyên Gia Cô Hạnh signature) */}
+          {showHeadlinePlate && (
+            <div className="pointer-events-none absolute left-3 top-7 z-25 flex flex-col gap-1 max-w-[240px]">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#42152A] to-zinc-950 border border-[#FF3B81]/60 px-2.5 py-0.5 shadow-lg backdrop-blur-md">
+                <span className="size-2 rounded-full bg-[#FF3B81] animate-ping"></span>
+                <span className="text-[9px] font-black uppercase text-[#FFF7F8] tracking-wider">
+                  {preset.expertBadge || "CÔ HẠNH CHIA SẺ"}
+                </span>
+              </div>
+              <div className="rounded-lg bg-black/80 border border-white/10 px-2.5 py-1 backdrop-blur-sm">
+                <span className="text-[10px] font-extrabold text-[#FFF7F8] uppercase tracking-wide leading-tight line-clamp-1">
+                  {headlineTitle}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Beat number tracker (Top Right) */}
+          {currentSegment && (
+            <div className="pointer-events-none absolute right-3 top-8 z-25 rounded bg-black/70 border border-zinc-800 px-2 py-0.5 text-[9px] font-mono font-extrabold text-[#FF3B81] backdrop-blur-sm">
+              BEAT 0{segments.indexOf(currentSegment) + 1} / 0{segments.length || 9}
+            </div>
+          )}
+
+          {/* Thẻ Info Card Pop-up (Luận Điểm Nổi Bật ở giữa khung hình) */}
+          {currentSegment?.infoCardText && (
+            <div className="pointer-events-none absolute inset-x-4 top-1/2 -translate-y-1/2 z-25 flex justify-center animate-asset-pop">
+              <div className="rounded-2xl border-2 border-[#FF3B81] bg-[#42152A]/95 px-4 py-2.5 shadow-2xl backdrop-blur-md text-center max-w-[270px]">
+                <div className="text-[9px] font-extrabold text-[#FF3B81] uppercase tracking-widest mb-0.5">
+                  ✦ LUẬN ĐIỂM CHỨNG MINH ✦
+                </div>
+                <div className="text-sm font-black text-[#FFF7F8] uppercase tracking-tight">
+                  {currentSegment.infoCardText}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Hologram Cyber UI / Camcorder HUD Overlay */}
           {hologramUI && (
             <div className="pointer-events-none absolute inset-0 z-15 flex flex-col justify-between p-3.5 text-cyan-400/90 font-mono text-[9px] hologram-scanline">
-              {/* Top HUD */}
               <div className="flex items-center justify-between pt-5">
                 <div className="flex items-center gap-1.5">
                   <span className="size-2 rounded-full bg-red-500 animate-ping"></span>
@@ -293,48 +415,21 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
                 </div>
               </div>
 
-              {/* Viewfinder crosshairs in 4 corners */}
+              {/* Viewfinder crosshairs */}
               <div className="absolute left-4 top-16 size-4 border-l-2 border-t-2 border-cyan-400/70"></div>
               <div className="absolute right-4 top-16 size-4 border-r-2 border-t-2 border-cyan-400/70"></div>
               <div className="absolute left-4 bottom-20 size-4 border-l-2 border-b-2 border-cyan-400/70"></div>
               <div className="absolute right-4 bottom-20 size-4 border-r-2 border-b-2 border-cyan-400/70"></div>
-
-              {/* Center Crosshair */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="size-6 border border-cyan-400/40 rounded-full flex items-center justify-center">
-                  <div className="size-1 bg-cyan-400 rounded-full"></div>
-                </div>
-              </div>
-
-              {/* Bottom Hologram Audio Meter */}
-              <div className="flex items-center justify-between pb-4">
-                <div className="flex items-center gap-1">
-                  <span className="text-[8px] text-cyan-400">CH1</span>
-                  <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5, 6].map((bar) => (
-                      <span
-                        key={bar}
-                        className={`w-1 h-2 rounded-xs ${
-                          bar > 4 ? "bg-red-400" : bar > 2 ? "bg-amber-400" : "bg-cyan-400"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="text-[8px] text-cyan-400 tracking-widest">
-                  HUD V2.4 // AI STABILIZED
-                </div>
-              </div>
             </div>
           )}
 
-          {/* 3D Asset Pop / Sticker Bounce according to speech */}
+          {/* 3D Asset Pop / Sticker */}
           {pop3dAssets && activeAsset && (
             <div className="pointer-events-none absolute left-1/2 top-24 z-25 -translate-x-1/2 animate-asset-pop">
               <div
                 className="flex items-center gap-2 rounded-2xl border px-3.5 py-1.5 shadow-2xl backdrop-blur-md"
                 style={{
-                  backgroundColor: "rgba(0,0,0,0.85)",
+                  backgroundColor: "rgba(66, 21, 42, 0.9)",
                   borderColor: activeAsset.color,
                   boxShadow: `0 0 25px ${activeAsset.color}50`,
                 }}
@@ -347,29 +442,9 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
             </div>
           )}
 
-          {/* Skin glow badge indicator on screen */}
-          {preset.skinGlowEnabled && (
-            <div className="absolute left-3 top-7 z-20 flex items-center gap-1 rounded-full bg-pink-500/80 backdrop-blur-sm px-2 py-0.5 text-[9px] font-extrabold text-white shadow-md animate-pulse">
-              <Sparkles className="size-2.5" /> Korean Glow Active
-            </div>
-          )}
-
-          {/* Play/Pause Center Overlay */}
-          {!isPlaying && (
-            <div
-              onClick={togglePlay}
-              className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 backdrop-blur-[1px] cursor-pointer"
-            >
-              <div className="flex size-14 items-center justify-center rounded-full bg-brand/90 text-black shadow-xl transition-transform hover:scale-110">
-                <Play className="size-7 fill-black ml-1" />
-              </div>
-            </div>
-          )}
-
           {/* Safe Zone Overlay (TikTok/Reels UI) */}
           {safeZone && (
             <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-3 text-white">
-              {/* Top Tabs */}
               <div className="flex justify-center gap-4 pt-6 text-[11px] font-bold text-white/80">
                 <span className="opacity-60">Đang theo dõi</span>
                 <span className="border-b-2 border-white pb-0.5">Dành cho bạn</span>
@@ -379,16 +454,16 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
               <div className="absolute right-2 bottom-20 flex flex-col items-center gap-3.5">
                 <div className="flex flex-col items-center">
                   <div className="flex size-9 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
-                    <Heart className="size-5 fill-red-500 text-red-500" />
+                    <Heart className="size-5 fill-[#FF3B81] text-[#FF3B81]" />
                   </div>
-                  <span className="text-[10px] font-bold mt-0.5 drop-shadow">86.4K</span>
+                  <span className="text-[10px] font-bold mt-0.5 drop-shadow">94.2K</span>
                 </div>
 
                 <div className="flex flex-col items-center">
                   <div className="flex size-9 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
                     <MessageCircle className="size-5 text-white" />
                   </div>
-                  <span className="text-[10px] font-bold mt-0.5 drop-shadow">1.2K</span>
+                  <span className="text-[10px] font-bold mt-0.5 drop-shadow">3.4K</span>
                 </div>
 
                 <div className="flex flex-col items-center">
@@ -399,40 +474,36 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
                 </div>
 
                 <div className="flex size-8 items-center justify-center rounded-full bg-black/60 border border-white/20 animate-spin">
-                  <Music className="size-4 text-brand" />
+                  <Music className="size-4 text-[#FF3B81]" />
                 </div>
               </div>
 
               {/* Bottom Caption Safe Zone */}
               <div className="w-[78%] pb-4">
-                <div className="text-xs font-bold drop-shadow">@masterclip.creator</div>
+                <div className="text-xs font-bold drop-shadow">@cohanh.duhoc</div>
                 <div className="text-[10px] text-zinc-200 line-clamp-2 mt-0.5 drop-shadow">
-                  Biến video thô thành short triệu view tự động bằng AI #masterclip #videoviral #shorts
+                  Giải oan hệ vừa học vừa làm tại Đài Loan — Hiểu đúng trước khi chọn #duhoc #cohanh
                 </div>
               </div>
             </div>
           )}
 
-          {/* Kinetic Subtitles: Hiện từng từ bám sát giọng đọc & Phóng to từ khóa đổi màu */}
-          <div className="pointer-events-none absolute inset-x-2 bottom-24 z-20 flex flex-col items-center justify-center text-center">
-            <div className="rounded-xl bg-black/75 px-3 py-2 backdrop-blur-md border border-white/10 shadow-2xl max-w-[270px]">
-              <div className="text-xs sm:text-sm font-black uppercase tracking-tight flex flex-wrap justify-center items-center gap-1.5 leading-relaxed">
-                {hookWords.map((word, i) => {
-                  const isCurrent = i === activeWordIndex;
-                  const highlightClass = getHighlightClass(word, isCurrent);
+          {/* Subtitles: Chữ Trắng Kem - Hồng Đậm #FF3B81 chuẩn Chị Hạnh */}
+          <div className="pointer-events-none absolute inset-x-2 bottom-24 z-24 flex flex-col items-center justify-center text-center">
+            {renderSubtitles()}
+          </div>
 
-                  return (
-                    <span
-                      key={i}
-                      className={`inline-block transition-all duration-150 ${highlightClass}`}
-                    >
-                      {word}
-                    </span>
-                  );
-                })}
+          {/* Play/Pause Button Overlay */}
+          {!isPlaying && (
+            <div
+              onClick={togglePlay}
+              className="absolute inset-0 z-28 flex items-center justify-center bg-black/35 backdrop-blur-[1px] cursor-pointer"
+            >
+              <div className="flex size-14 items-center justify-center rounded-full bg-[#FF3B81] text-white shadow-2xl transition-transform hover:scale-110">
+                <Play className="size-7 fill-white ml-1" />
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Player Controls Bar */}
@@ -445,11 +516,11 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
             <input
               type="range"
               min={0}
-              max={duration || 60}
+              max={duration || 30.4}
               step={0.1}
               value={currentTime}
               onChange={handleSeek}
-              className="h-1 flex-1 accent-brand bg-zinc-800 rounded-lg cursor-pointer"
+              className="h-1 flex-1 accent-[#FF3B81] bg-zinc-800 rounded-lg cursor-pointer"
             />
             <span className="text-[10px] text-zinc-500 font-mono w-8 text-right">
               {formatTime(duration)}
@@ -460,7 +531,7 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={togglePlay}
-                className="flex size-7 items-center justify-center rounded-full bg-zinc-800 text-white hover:bg-brand hover:text-black transition-colors"
+                className="flex size-7 items-center justify-center rounded-full bg-zinc-800 text-white hover:bg-[#FF3B81] transition-colors"
               >
                 {isPlaying ? <Pause className="size-3.5" /> : <Play className="size-3.5 ml-0.5" />}
               </button>
@@ -472,15 +543,20 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
               </button>
             </div>
 
-            {/* Test Transition & SFX Button */}
-            <button
-              onClick={triggerTransitionPreview}
-              className="flex items-center gap-1 rounded-md border border-brand/40 bg-brand/10 px-2 py-0.5 text-[10px] font-bold text-brand hover:bg-brand hover:text-black transition-all"
-              title="Kích hoạt thử hiệu ứng chuyển cảnh Zoom, Flash và âm thanh Whoosh/Pop"
-            >
-              <Zap className="size-3" />
-              <span>Thử VFX / SFX</span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              {currentSegment?.brollId && (
+                <span className="rounded bg-emerald-500/20 border border-emerald-500/30 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-400">
+                  🎬 Cảnh Trám Bật
+                </span>
+              )}
+              <button
+                onClick={triggerTransitionPreview}
+                className="flex items-center gap-1 rounded-md border border-[#FF3B81]/40 bg-[#FF3B81]/15 px-2 py-0.5 text-[10px] font-bold text-[#FF3B81] hover:bg-[#FF3B81] hover:text-white transition-all"
+              >
+                <Zap className="size-3" />
+                <span>Thử VFX/SFX</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

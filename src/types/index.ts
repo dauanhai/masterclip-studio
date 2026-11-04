@@ -23,6 +23,29 @@ export interface Asset3DTrigger {
   sfx: "pop" | "cash" | "ding" | "bassdrop" | "whoosh";
 }
 
+export interface BrollItem {
+  id: string;
+  title: string;
+  category: "education" | "business" | "lifestyle" | "technology" | "custom";
+  url: string;
+  thumbnail?: string;
+  duration: number;
+  isCustom?: boolean;
+}
+
+export interface TranscriptSegment {
+  id: string;
+  sourceStart: number;
+  sourceEnd: number;
+  text: string;
+  highlight: string;
+  zoomScale: number; // 1.0, 1.08, 1.14
+  infoCardText?: string;
+  brollId?: string; // matched B-roll
+  brollMode: "cutaway" | "pip" | "none";
+  active: boolean;
+}
+
 export interface Preset {
   id: string;
   name: string;
@@ -34,17 +57,20 @@ export interface Preset {
   skinGlowEnabled: boolean;
   speed: number;
   autoSilenceCut: boolean;
-  subtitleStyle: "neon" | "karaoke" | "box" | "minimal";
+  subtitleStyle: "chanh" | "neon" | "karaoke" | "box" | "minimal";
   bgmMood: "trending" | "chill" | "upbeat" | "dramatic" | "none";
   sampleHook: string;
   tags: string[];
-  // New features
   recommendedTransition: TransitionType;
   recommendedVfx: VfxType[];
   hologramDefault: boolean;
-  highlightKeywordColor: "yellow" | "red" | "green" | "magenta";
+  highlightKeywordColor: "yellow" | "red" | "green" | "magenta" | "rose";
   keyWords: string[];
   activeAssets3D: Asset3DTrigger[];
+  // Chuyên gia C Hạnh features
+  headlineText?: string;
+  expertBadge?: string;
+  defaultSegments?: TranscriptSegment[];
 }
 
 export interface VideoSource {
@@ -54,6 +80,8 @@ export interface VideoSource {
   size: number;
   duration: number;
   isSample?: boolean;
+  isChanhSample?: boolean;
+  transcript?: TranscriptSegment[];
 }
 
 export interface AdvancedSettingsConfig {
@@ -69,8 +97,8 @@ export interface AdvancedSettingsConfig {
   silenceThreshold: number; // in seconds
   speed: number;
   subtitlesEnabled: boolean;
-  subtitleStyle: "neon" | "karaoke" | "box" | "minimal";
-  highlightKeywordColor: "yellow" | "red" | "green" | "magenta";
+  subtitleStyle: "chanh" | "neon" | "karaoke" | "box" | "minimal";
+  highlightKeywordColor: "yellow" | "red" | "green" | "magenta" | "rose";
   zoomKeywords: boolean;
   pop3dAssets: boolean;
   sfxEnabled: boolean;
@@ -78,6 +106,12 @@ export interface AdvancedSettingsConfig {
   musicVolume: number; // 0 - 100
   duckingLevel: number; // % volume reduction when speech detected
   hookOpening: boolean;
+  // C Hạnh specific
+  headlineText: string;
+  showHeadlinePlate: boolean;
+  showInfoCards: boolean;
+  enableDynamicZoomLadder: boolean;
+  enableBrollCutaways: boolean;
 }
 
 export interface ShortClip {
@@ -93,6 +127,7 @@ export interface ShortClip {
   aspectRatio: AspectRatio;
   tags: string[];
   appliedEffects: string[];
+  isMasterCut?: boolean;
 }
 
 export interface ProjectHistoryItem {

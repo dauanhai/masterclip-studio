@@ -1,11 +1,41 @@
 import { Preset } from "../types";
+import { CHANH_FULL_TRANSCRIPT } from "./brollAndTranscript";
 
 export const PRESETS: Preset[] = [
+  {
+    id: "chanh-expert",
+    name: "Chuyên Gia Cô Hạnh — Expert Reel",
+    subtitle: "Mẫu video chuyên gia chị Hạnh (Đài Loan)",
+    badge: "MẪU CHUẨN CHỊ HẠNH",
+    description: "Nắm trọn lời thoại gốc, chèn cảnh trám B-Roll tư liệu theo câu nói, camera punch-in 1.08x-1.14x, phụ đề Trắng Kem chữ to điểm xuyết Hồng Đậm #FF3B81, thẻ Info Card luận điểm.",
+    iconName: "Sparkles",
+    accentColor: "#FF3B81", // Hot Rose Pink
+    skinGlowEnabled: false, // Tự nhiên, không đổi màu da giả
+    speed: 1.0,
+    autoSilenceCut: true,
+    subtitleStyle: "chanh",
+    bgmMood: "upbeat", // 120bpm tech beat voice-carved
+    sampleHook: "HỆ VỪA HỌC VỪA LÀM Ở ĐÀI LOAN CHỈ CẤP BẰNG NGHỀ THÔI Ạ?",
+    tags: ["Chuyên Gia", "Chị Hạnh", "Du Học", "B-Roll Cutaway"],
+    recommendedTransition: "zoom-punch",
+    recommendedVfx: ["flash"],
+    hologramDefault: false,
+    highlightKeywordColor: "rose",
+    headlineText: "GIẢI OAN DU HỌC ĐÀI LOAN",
+    expertBadge: "CÔ HẠNH CHIA SẺ",
+    keyWords: ["QUÁ OAN", "BẰNG CHÍNH QUY", "BẰNG ĐẠI HỌC CHÍNH QUY", "QUỐC GIA", "THẠC SĨ", "TIẾN SĨ", "BẰNG NGHỀ"],
+    activeAssets3D: [
+      { id: "ch1", triggerWord: "BẰNG CHÍNH QUY", emoji: "🎓", label: "Đại học chính quy", color: "#FF3B81", sfx: "cash" },
+      { id: "ch2", triggerWord: "QUÁ OAN", emoji: "⚡", label: "Phản biện mạnh", color: "#FF3B81", sfx: "bassdrop" },
+      { id: "ch3", triggerWord: "QUỐC GIA", emoji: "🌏", label: "Giá trị quốc tế", color: "#38BDF8", sfx: "ding" },
+    ],
+    defaultSegments: CHANH_FULL_TRANSCRIPT,
+  },
   {
     id: "hero-neon",
     name: "Hero Neon & Cyber Viral",
     subtitle: "Style Alex Hormozi / MrBeast",
-    badge: "VIRAL TIKTOK SỐ 1",
+    badge: "VIRAL TIKTOK",
     description: "Phụ đề chữ to giật nhịp, từ khóa quan trọng phóng to 130% đổi màu Vàng Neon/Đỏ rực, Hologram UI, rung lắc camera khi nói điểm nhấn.",
     iconName: "Zap",
     accentColor: "#FF007F", // Neon Magenta

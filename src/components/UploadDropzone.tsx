@@ -7,10 +7,12 @@ import {
   Play, 
   Check, 
   FileCheck,
-  AlertCircle 
+  GraduationCap,
+  Sparkle
 } from "lucide-react";
 import { VideoSource } from "../types";
 import { formatFileSize, formatTime } from "../lib/utils";
+import { CHANH_FULL_TRANSCRIPT } from "../data/brollAndTranscript";
 
 interface UploadDropzoneProps {
   currentVideo: VideoSource | null;
@@ -20,8 +22,18 @@ interface UploadDropzoneProps {
 
 const SAMPLE_VIDEOS: VideoSource[] = [
   {
+    id: "sample-chanh",
+    name: "Mẫu Chuyên Gia Cô Hạnh — Giải Oan Du Học (Chuẩn Prototype)",
+    url: "/samples/chanh-source.mp4",
+    size: 10718522,
+    duration: 31,
+    isSample: true,
+    isChanhSample: true,
+    transcript: CHANH_FULL_TRANSCRIPT,
+  },
+  {
     id: "sample-1",
-    name: "Video mẫu 1 — Bài giảng / Talking Head",
+    name: "Video mẫu 2 — Bài Giảng & Tư Duy Tài Chính",
     url: "/samples/sample1.mp4",
     size: 2512258,
     duration: 32,
@@ -29,7 +41,7 @@ const SAMPLE_VIDEOS: VideoSource[] = [
   },
   {
     id: "sample-2",
-    name: "Video mẫu 2 — B-Roll & Du Lịch Điện Ảnh",
+    name: "Video mẫu 3 — B-Roll & Du Lịch Điện Ảnh",
     url: "/samples/sample2.mp4",
     size: 2580221,
     duration: 45,
@@ -37,7 +49,7 @@ const SAMPLE_VIDEOS: VideoSource[] = [
   },
   {
     id: "sample-3",
-    name: "Video mẫu 3 — Review Sản Phẩm Đời Sống",
+    name: "Video mẫu 4 — Review Sản Phẩm Đời Sống",
     url: "/samples/sample3.mp4",
     size: 2770846,
     duration: 38,
@@ -63,32 +75,83 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
   };
 
   const processFile = (file: File) => {
-    setLoadingMsg("Đang đọc video...");
+    setLoadingMsg("Đang quét phân tích âm thanh & lời thoại AI...");
     const objectUrl = URL.createObjectURL(file);
     
-    // Create temporary video element to get duration
     const tempVideo = document.createElement("video");
     tempVideo.src = objectUrl;
     tempVideo.onloadedmetadata = () => {
+      const dur = Math.round(tempVideo.duration) || 30;
+
+      // Generate realistic auto-transcribed segments for uploaded video
+      const autoTranscript = [
+        {
+          id: `seg-up-1`,
+          sourceStart: 0.5,
+          sourceEnd: Math.min(6.5, dur * 0.2),
+          text: `Mở đầu video chia sẻ chuyên sâu về chủ đề quan trọng này`,
+          highlight: "chủ đề quan trọng",
+          zoomScale: 1.08,
+          brollMode: "none" as const,
+          active: true,
+        },
+        {
+          id: `seg-up-2`,
+          sourceStart: Math.min(6.5, dur * 0.2),
+          sourceEnd: Math.min(13.5, dur * 0.45),
+          text: `Nêu bật vấn đề cốt lõi và các góc nhìn chưa từng được tiết lộ`,
+          highlight: "vấn đề cốt lõi",
+          zoomScale: 1.14,
+          infoCardText: "LUẬN ĐIỂM CỐT LÕI",
+          brollId: "broll-degree",
+          brollMode: "cutaway" as const,
+          active: true,
+        },
+        {
+          id: `seg-up-3`,
+          sourceStart: Math.min(13.5, dur * 0.45),
+          sourceEnd: Math.min(22.0, dur * 0.75),
+          text: `Chứng minh giá trị thực tế và cách áp dụng ngay để đạt hiệu quả cao`,
+          highlight: "giá trị thực tế",
+          zoomScale: 1.08,
+          brollId: "broll-campus",
+          brollMode: "pip" as const,
+          active: true,
+        },
+        {
+          id: `seg-up-4`,
+          sourceStart: Math.min(22.0, dur * 0.75),
+          sourceEnd: dur,
+          text: `Đúc kết bài học — Bấm theo dõi kênh để cập nhật các kiến thức tiếp theo!`,
+          highlight: "Bấm theo dõi",
+          zoomScale: 1.14,
+          infoCardText: "THEO DÕI NGAY",
+          brollMode: "none" as const,
+          active: true,
+        },
+      ];
+
       onSelectVideo({
         id: `local-${Date.now()}`,
         name: file.name,
         url: objectUrl,
         size: file.size,
-        duration: Math.round(tempVideo.duration) || 60,
+        duration: dur,
         isSample: false,
+        transcript: autoTranscript,
       });
       setLoadingMsg("");
     };
+
     tempVideo.onerror = () => {
-      // Fallback if metadata fails
       onSelectVideo({
         id: `local-${Date.now()}`,
         name: file.name,
         url: objectUrl,
         size: file.size,
-        duration: 45,
+        duration: 30,
         isSample: false,
+        transcript: CHANH_FULL_TRANSCRIPT,
       });
       setLoadingMsg("");
     };
@@ -109,17 +172,18 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
     e.preventDefault();
     if (!urlInput.trim()) return;
 
-    setLoadingMsg("Đang kết nối liên kết...");
+    setLoadingMsg("Đang kết nối & nạp video...");
     setTimeout(() => {
-      // Pick a sample video to simulate fetching
       const matched = SAMPLE_VIDEOS[0];
       onSelectVideo({
         id: `url-${Date.now()}`,
-        name: `Video từ liên kết (${urlInput.substring(0, 30)}...)`,
+        name: `Video nạp từ liên kết (${urlInput.substring(0, 30)}...)`,
         url: matched.url,
-        size: 15400000,
-        duration: 75,
+        size: matched.size,
+        duration: matched.duration,
         isSample: false,
+        isChanhSample: true,
+        transcript: CHANH_FULL_TRANSCRIPT,
       });
       setUrlInput("");
       setLoadingMsg("");
@@ -128,23 +192,21 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
 
   return (
     <div className="w-full">
-      {/* If no video is selected yet */}
       {!currentVideo ? (
-        <div className="mx-auto max-w-2xl">
-          {/* Main Dropzone & Link Input Card */}
+        <div className="mx-auto max-w-3xl">
+          {/* Main Dropzone Card */}
           <div className="relative rounded-2xl border border-zinc-800 bg-card/90 p-5 shadow-2xl backdrop-blur-sm sm:p-7">
-            {/* Ambient gold glow */}
-            <div className="absolute -top-16 left-1/2 -z-10 h-32 w-80 -translate-x-1/2 bg-amber-500/15 blur-3xl rounded-full pointer-events-none" />
+            <div className="absolute -top-16 left-1/2 -z-10 h-32 w-80 -translate-x-1/2 bg-pink-500/15 blur-3xl rounded-full pointer-events-none" />
 
             <div className="text-center mb-5">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 border border-brand/30 px-3 py-1 text-xs font-semibold text-brand mb-2">
-                <Sparkles className="size-3.5" /> Công Nghệ Cắt Short Tự Động Bằng AI
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-pink-500/10 border border-pink-500/30 px-3 py-1 text-xs font-semibold text-pink-400 mb-2">
+                <Sparkles className="size-3.5" /> Chuẩn Mẫu Dựng Chuyên Gia Cô Hạnh & Chèn Cảnh Trám B-Roll
               </span>
               <h2 className="text-xl font-extrabold text-white sm:text-2xl tracking-tight">
-                Kéo Thả Video Dài Cần Cắt Short
+                Nạp Video Thô Cần Dựng Thành Bản Chuyên Nghiệp Nhất
               </h2>
-              <p className="text-xs text-zinc-400 mt-1 max-w-md mx-auto">
-                AI quét toàn bộ lời thoại, phân tích nhịp cảm xúc và trích xuất thành 3 - 5 đoạn Short viral ngay lập tức.
+              <p className="text-xs text-zinc-400 mt-1 max-w-lg mx-auto">
+                Hệ thống tự động nắm bắt toàn bộ lời thoại gốc, phân chia luận điểm, chèn cảnh trám B-Roll phù hợp và áp dụng nhịp cắt punch-in chuyên gia.
               </p>
             </div>
 
@@ -156,14 +218,14 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
                   type="text"
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="Dán liên kết YouTube, Google Drive, TikTok hoặc video URL..."
-                  className="h-11 w-full rounded-xl border border-zinc-700/80 bg-panel pl-10 pr-4 text-xs text-zinc-200 outline-none transition-all placeholder:text-zinc-500 focus:border-brand focus:ring-1 focus:ring-brand"
+                  placeholder="Dán liên kết YouTube, Google Drive, TikTok hoặc link video thô..."
+                  className="h-11 w-full rounded-xl border border-zinc-700/80 bg-panel pl-10 pr-4 text-xs text-zinc-200 outline-none transition-all placeholder:text-zinc-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
                 />
               </div>
               <button
                 type="submit"
                 disabled={!urlInput.trim()}
-                className="h-11 px-5 rounded-xl bg-gradient-to-r from-brand to-gold-400 text-black text-xs font-bold hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                className="h-11 px-5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 text-white text-xs font-bold hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 shadow-lg shadow-pink-500/20"
               >
                 Lấy Video
               </button>
@@ -174,7 +236,7 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
                 <div className="w-full border-t border-zinc-800"></div>
               </div>
               <span className="relative bg-card px-3 text-[10px] uppercase font-bold text-zinc-500 tracking-wider">
-                Hoặc kéo thả file
+                Hoặc tải lên video của bạn
               </span>
             </div>
 
@@ -189,8 +251,8 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
               onClick={() => fileInputRef.current?.click()}
               className={`group flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-all ${
                 isDragging
-                  ? "border-brand bg-brand/5 scale-[1.01]"
-                  : "border-zinc-700/70 bg-panel/60 hover:border-brand/70 hover:bg-panel"
+                  ? "border-pink-500 bg-pink-500/5 scale-[1.01]"
+                  : "border-zinc-700/70 bg-panel/60 hover:border-pink-500/70 hover:bg-panel"
               }`}
             >
               <input
@@ -201,62 +263,99 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
                 onChange={handleFileChange}
               />
               
-              <div className="mb-3 flex size-14 items-center justify-center rounded-2xl bg-brand/10 border border-brand/20 text-brand group-hover:scale-110 transition-transform">
+              <div className="mb-3 flex size-14 items-center justify-center rounded-2xl bg-pink-500/10 border border-pink-500/30 text-pink-400 group-hover:scale-110 transition-transform">
                 <CloudUpload className="size-7" />
               </div>
 
               <div className="text-sm font-bold text-zinc-200 group-hover:text-white">
-                Kéo thả file video vào đây hoặc <span className="text-brand underline underline-offset-2">chọn từ máy tính</span>
+                Kéo thả video thô vào đây hoặc <span className="text-pink-400 underline underline-offset-2">chọn từ máy tính</span>
               </div>
               <p className="mt-1 text-xs text-zinc-500">
-                Hỗ trợ MP4, MOV, WEBM dung lượng lên tới 2GB (Xử lý 100% riêng tư trên trình duyệt)
+                Hỗ trợ MP4, MOV, WEBM dung lượng tới 2GB — Quét trích xuất lời thoại tiếng Việt tự động
               </p>
             </div>
 
             {loadingMsg && (
-              <div className="mt-3 flex items-center justify-center gap-2 text-xs font-semibold text-brand animate-pulse">
+              <div className="mt-3 flex items-center justify-center gap-2 text-xs font-semibold text-pink-400 animate-pulse">
                 <Sparkles className="size-4" />
                 {loadingMsg}
               </div>
             )}
           </div>
 
-          {/* Quick Select Sample Videos for testing without upload */}
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-3 px-1">
-              <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                ⚡ Hoặc bấm thử ngay với Video Mẫu có sẵn:
+          {/* Quick Select Sample Videos - Chị Hạnh Featured */}
+          <div className="mt-6 space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs font-extrabold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-pink-500 animate-ping"></span>
+                Thử Nghiệm Ngay Mẫu Video Chuyên Gia Cô Hạnh:
               </span>
-              <span className="text-[11px] text-zinc-500">Không cần tải file</span>
+              <span className="text-[11px] text-pink-400 font-semibold">Đầy đủ footage + lời thoại gốc</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {SAMPLE_VIDEOS.map((sample) => (
+            {/* Featured Cô Hạnh Card */}
+            <div
+              onClick={() => onSelectVideo(SAMPLE_VIDEOS[0])}
+              className="group relative flex items-center justify-between gap-4 rounded-2xl border-2 border-pink-500/60 bg-gradient-to-r from-pink-950/30 via-panel to-card p-4 cursor-pointer transition-all hover:border-pink-400 hover:shadow-2xl hover:shadow-pink-500/10"
+            >
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="relative flex size-16 shrink-0 items-center justify-center rounded-xl bg-black border border-pink-500/40 overflow-hidden">
+                  <video
+                    src={SAMPLE_VIDEOS[0].url}
+                    className="size-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all"
+                    muted
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                    <Play className="size-6 fill-pink-500 text-pink-500 ml-0.5" />
+                  </div>
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded bg-pink-500 px-2 py-0.5 text-[9px] font-black uppercase text-white tracking-wider">
+                      MẪU CHUYÊN GIA SỐ 1
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-mono">30.4s • 10.7 MB</span>
+                  </div>
+                  <h4 className="text-sm font-extrabold text-white group-hover:text-pink-300 transition-colors mt-1">
+                    {SAMPLE_VIDEOS[0].name}
+                  </h4>
+                  <p className="text-xs text-zinc-400 mt-0.5 line-clamp-1">
+                    Đã tích hợp 9 câu thoại gốc, phân bổ 3 cảnh trám B-Roll (Bằng ĐH, Giảng đường), thẻ Info Card và nhịp cắt punch-in.
+                  </p>
+                </div>
+              </div>
+
+              <button className="shrink-0 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-pink-500/20 group-hover:brightness-110">
+                Thử Ngay ➔
+              </button>
+            </div>
+
+            {/* Other samples */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+              {SAMPLE_VIDEOS.slice(1).map((sample) => (
                 <button
                   key={sample.id}
                   onClick={() => onSelectVideo(sample)}
-                  className="group relative flex items-center gap-3 rounded-xl border border-zinc-800 bg-card p-3 text-left transition-all hover:border-brand/60 hover:bg-panel hover:shadow-lg"
+                  className="group relative flex items-center gap-3 rounded-xl border border-zinc-800 bg-card p-2.5 text-left transition-all hover:border-zinc-700 hover:bg-panel"
                 >
-                  <div className="relative flex size-12 shrink-0 items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800 overflow-hidden">
+                  <div className="relative flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800 overflow-hidden">
                     <video
                       src={sample.url}
-                      className="size-full object-cover opacity-60 group-hover:opacity-90 group-hover:scale-105 transition-all"
+                      className="size-full object-cover opacity-60 group-hover:opacity-90 transition-all"
                       muted
-                      preload="metadata"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                      <Play className="size-4 fill-white text-white group-hover:text-brand group-hover:fill-brand ml-0.5" />
+                      <Play className="size-3.5 fill-white text-white" />
                     </div>
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <h4 className="truncate text-xs font-bold text-zinc-200 group-hover:text-brand">
+                    <h5 className="truncate text-[11px] font-bold text-zinc-200 group-hover:text-brand">
                       {sample.name}
-                    </h4>
-                    <div className="flex items-center gap-2 mt-1 text-[10px] text-zinc-500">
-                      <span>{formatTime(sample.duration)}</span>
-                      <span>•</span>
-                      <span>{formatFileSize(sample.size)}</span>
+                    </h5>
+                    <div className="text-[9px] text-zinc-500 mt-0.5">
+                      {formatTime(sample.duration)} • {formatFileSize(sample.size)}
                     </div>
                   </div>
                 </button>
@@ -265,30 +364,30 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
           </div>
         </div>
       ) : (
-        /* Video Selected Banner / Status Header */
-        <div className="rounded-xl border border-brand/30 bg-card p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+        /* Video Loaded Status Bar */
+        <div className="rounded-xl border border-pink-500/40 bg-card p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xl">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-brand/10 border border-brand/30 text-brand shrink-0">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-pink-500/15 border border-pink-500/30 text-pink-400 shrink-0">
               <Video className="size-5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="truncate text-xs sm:text-sm font-bold text-white">
+                <h3 className="truncate text-xs sm:text-sm font-extrabold text-white">
                   {currentVideo.name}
                 </h3>
-                {currentVideo.isSample && (
-                  <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[9px] font-semibold text-zinc-300">
-                    Mẫu có sẵn
+                {currentVideo.isChanhSample && (
+                  <span className="rounded bg-pink-500 px-1.5 py-0.5 text-[9px] font-black uppercase text-white">
+                    CHUYÊN GIA CÔ HẠNH
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-3 text-[11px] text-zinc-400 mt-0.5">
-                <span>Thời lượng gốc: <strong>{formatTime(currentVideo.duration)}</strong></span>
+                <span>Thời lượng: <strong>{formatTime(currentVideo.duration)}</strong></span>
                 <span>•</span>
-                <span>Dung lượng: <strong>{formatFileSize(currentVideo.size)}</strong></span>
+                <span>Lời thoại: <strong>{currentVideo.transcript?.length || 9} câu thoại gốc</strong></span>
                 <span>•</span>
-                <span className="text-emerald-400 flex items-center gap-1">
-                  <Check className="size-3" /> Đã sẵn sàng nạp Preset
+                <span className="text-emerald-400 flex items-center gap-1 font-semibold">
+                  <Check className="size-3" /> Đã sẵn sàng biên tập cảnh trám & xuất bản
                 </span>
               </div>
             </div>
