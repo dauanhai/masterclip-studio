@@ -46,7 +46,10 @@ export const OutputResults: React.FC<OutputResultsProps> = ({
     viralScore: 99,
     hookText: `"${firstHook}"`,
     summary: `Biên tập hoàn chỉnh toàn bộ ${segments.length || 9} câu thoại gốc của video, điều phối ${brollCount} cảnh trám B-Roll tư liệu minh họa, camera punch-in linh hoạt và nhạc nền chuẩn chất chuyên gia.`,
-    videoUrl: sourceVideo.url,
+    videoUrl:
+      sourceVideo.url.includes("chi-hanh") || sourceVideo.isChanhSample
+        ? "/samples/sample-chi-hanh-superpower.mp4"
+        : sourceVideo.url,
     aspectRatio: "9:16",
     tags: ["Master Cut", "Chuyên Gia", "Full Edit", "Tiktok / Reels Top"],
     appliedEffects: [
@@ -71,7 +74,10 @@ export const OutputResults: React.FC<OutputResultsProps> = ({
       viralScore: 98,
       hookText: `"${firstHook}"`,
       summary: "3 giây đầu gây tò mò cực độ và đánh trúng tâm lý tò mò của người xem.",
-      videoUrl: sourceVideo.url,
+      videoUrl:
+      sourceVideo.url.includes("chi-hanh") || sourceVideo.isChanhSample
+        ? "/samples/sample-chi-hanh-superpower.mp4"
+        : sourceVideo.url,
       aspectRatio: "9:16",
       tags: ["Strong Hook", "Giữ Chân", "Tiktok Viral"],
       appliedEffects: ["Kinetic Subtitles", "Punch-in 1.14x", "Thẻ Info Card"],
@@ -85,7 +91,10 @@ export const OutputResults: React.FC<OutputResultsProps> = ({
       viralScore: 95,
       hookText: `"${segments[Math.min(3, segments.length - 1)]?.text || firstHook}"`,
       summary: "Đưa ra bằng chứng thuyết phục, kết hợp cảnh trám và kêu gọi hành động CTA.",
-      videoUrl: sourceVideo.url,
+      videoUrl:
+      sourceVideo.url.includes("chi-hanh") || sourceVideo.isChanhSample
+        ? "/samples/sample-chi-hanh-superpower.mp4"
+        : sourceVideo.url,
       aspectRatio: "9:16",
       tags: ["Bằng Chứng", "B-Roll Cutaway", "CTA Chốt Đơn"],
       appliedEffects: ["Cảnh trám B-Roll", "Audio Ducking", "Highlight từ khóa"],

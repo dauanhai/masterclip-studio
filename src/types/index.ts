@@ -143,3 +143,46 @@ export interface ProjectHistoryItem {
   viralScore: number;
   isFavorite: boolean;
 }
+
+export type StudioMode = "superpower" | "template-clone";
+
+export interface CloneTemplateStructure {
+  id: string;
+  url: string;
+  title: string;
+  sourcePlatform: "facebook" | "tiktok" | "youtube" | "instagram";
+  duration: number;
+  hookDuration: number;
+  breakdown: {
+    phase: string;
+    timeRange: string;
+    description: string;
+    action: string;
+  }[];
+}
+
+export interface CustomerStylePreset {
+  id: string;
+  name: string;
+  roleTitle: string;
+  vibe: string;
+  glowTone: "korean-glow" | "warm-sunlight" | "cool-studio" | "luxury-gold";
+  colorAccent: string;
+  fontBadge: string;
+  bgmMood: "upbeat" | "trending" | "chill" | "dramatic";
+  description: string;
+}
+
+export interface TemplateCloneConfig {
+  referenceUrl: string;
+  customerPhotoUrl: string;
+  customerName: string;
+  customerTitle: string;
+  headlineHook: string;
+  coreMessage: string;
+  ctaText: string;
+  selectedStyleId: string;
+  motionStyle: "ken-burns" | "breathing" | "dynamic-punch" | "dolly-zoom";
+  speed: number;
+}
+

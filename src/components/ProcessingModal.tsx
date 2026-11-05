@@ -31,32 +31,38 @@ interface Step {
 const STEPS: Step[] = [
   {
     id: 1,
-    label: "Phân tích ngữ âm & Trích xuất lời thoại",
-    detail: "Đang chạy mô hình Whisper AI nhận diện phụ đề tiếng Việt...",
+    label: "Phân tích ngữ âm & Cắt bỏ 11.4s khoảng lặng thừa",
+    detail: "Tự động phát hiện và loại bỏ các đoạn ngừng thở, ngập ngừng, tối ưu thời lượng...",
     icon: AudioWaveform,
   },
   {
     id: 2,
-    label: "Quét đoạn Hook cao trào & Chấm điểm Viral Score",
-    detail: "Tìm kiếm các câu nói gây kích thích trí tò mò & giữ chân người xem...",
+    label: "Tăng tốc độ nói 1.13x - Giữ nguyên cao độ giọng",
+    detail: "Đẩy nhịp nói dứt khoát chuẩn chuyên gia mà không bị méo tiếng...",
     icon: Sparkles,
   },
   {
     id: 3,
-    label: "Cắt khoảng lặng & Căn chỉnh tỉ lệ 9:16",
-    detail: "Tự động loại bỏ các khoảng chết âm thanh, zoom cận chủ thể...",
+    label: "Phân bổ 3 Cảnh trám B-Roll & Thẻ Infographic",
+    detail: "Tự động chèn bằng tốt nghiệp, giảng đường và chứng thực giá trị quốc tế...",
     icon: Film,
   },
   {
     id: 4,
-    label: "Áp dụng Preset & Tạo phụ đề động",
-    detail: "Tô màu phong cách, hiệu ứng làm đẹp da và phối nhạc nền thông minh...",
+    label: "Làm đẹp da Korean Glow & Son môi tự nhiên",
+    detail: "Tối ưu hóa tone da sáng mịn, khử quầng thâm và tăng độ nét khuôn mặt...",
     icon: Wand2,
   },
   {
     id: 5,
-    label: "Hoàn tất render 3 video Short thành phẩm",
-    detail: "Đóng gói video độ phân giải cao và chuẩn bị file tải về...",
+    label: "Tạo phụ đề Kinetic Safe-Zone & Nhạc nền Ducking 85%",
+    detail: "Phụ đề chữ to giật nhịp đổi màu từ khóa, nhạc nền tự giảm khi có tiếng nói...",
+    icon: Bot,
+  },
+  {
+    id: 6,
+    label: "Agent Tổng tự duyệt chất lượng QC (Điểm Viral 99/100)",
+    detail: "Kiểm tra an toàn safe-zone TikTok/Reels, cân bằng âm thanh và xuất bản Master...",
     icon: CheckCircle2,
   },
 ];
@@ -104,14 +110,16 @@ export const ProcessingModal: React.FC<ProcessingModalProps> = ({
         setCurrentStepIndex(stepIdx);
 
         // Add periodic logs
-        if (Math.round(next) === 20) {
-          setLogs((l) => [...l, `[Whisper AI] Nhận diện 420 từ thoại tiếng Việt với độ chính xác 99.2%`]);
-        } else if (Math.round(next) === 45) {
-          setLogs((l) => [...l, `[Viral Scorer] Phát hiện 3 đoạn cao trào xuất sắc (Điểm viral: 96/100, 92/100, 90/100)`]);
+        if (Math.round(next) === 16) {
+          setLogs((l) => [...l, `[Audio Trim] Đã phát hiện và cắt bỏ 11.4s khoảng lặng thừa & ngập ngừng`]);
+        } else if (Math.round(next) === 34) {
+          setLogs((l) => [...l, `[Tempo Boost] Tăng tốc độ nói 1.13x giữ nguyên cao độ giọng chuyên gia Cô Hạnh`]);
+        } else if (Math.round(next) === 52) {
+          setLogs((l) => [...l, `[B-Roll AI] Đã ghép 3 cảnh trám (bằng cấp, giảng đường) & thẻ infographic`]);
         } else if (Math.round(next) === 70) {
-          setLogs((l) => [...l, `[Auto Trim] Đã cắt bỏ 4.8 giây khoảng lặng, tăng tốc nhịp 1.15x`]);
+          setLogs((l) => [...l, `[Korean Glow] Áp dụng bộ lọc làm mịn da sáng hồng & khử bóng nhờn`]);
         } else if (Math.round(next) === 88) {
-          setLogs((l) => [...l, `[Audio Ducking] Đã hòa âm nhạc nền ${preset.bgmMood} tự động giảm -80% khi có tiếng nói`]);
+          setLogs((l) => [...l, `[Agent Tổng QC] Tự duyệt chất lượng âm thanh ducking 85% & safe-zone 100% ĐẠT!`]);
         }
 
         return next;

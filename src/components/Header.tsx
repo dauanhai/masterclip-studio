@@ -12,12 +12,21 @@ import {
   X
 } from "lucide-react";
 
+import { StudioMode } from "../types";
+
 interface HeaderProps {
   onShowPricing: () => void;
   onShowHistory: () => void;
+  studioMode: StudioMode;
+  onSelectStudioMode: (mode: StudioMode) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onShowPricing, onShowHistory }) => {
+export const Header: React.FC<HeaderProps> = ({
+  onShowPricing,
+  onShowHistory,
+  studioMode,
+  onSelectStudioMode,
+}) => {
   const [showDocsModal, setShowDocsModal] = useState(false);
 
   return (
@@ -42,9 +51,36 @@ export const Header: React.FC<HeaderProps> = ({ onShowPricing, onShowHistory }) 
                 </span>
               </div>
               <p className="hidden text-[11px] text-zinc-400 sm:block">
-                Tự động cắt ghép Video dài thành nhiều Short Viral
+                Auto-Pilot Agent Tổng & Clone Video Từ Link Mẫu
               </p>
             </div>
+          </div>
+
+          {/* Center Mode Switcher */}
+          <div className="hidden md:flex items-center rounded-xl border border-zinc-800 bg-panel/80 p-1 shadow-inner">
+            <button
+              onClick={() => onSelectStudioMode("superpower")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                studioMode === "superpower"
+                  ? "bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md shadow-pink-500/20"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <Sparkles className="size-3.5" />
+              <span>⚡ Agent Tổng Superpower</span>
+            </button>
+
+            <button
+              onClick={() => onSelectStudioMode("template-clone")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                studioMode === "template-clone"
+                  ? "bg-gradient-to-r from-amber-500 to-orange-600 text-black shadow-md shadow-amber-500/20"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <Sparkles className="size-3.5" />
+              <span>🎬 Clone Video Từ Link Mẫu + Ảnh</span>
+            </button>
           </div>
 
           {/* Quick Stats & Navigation */}

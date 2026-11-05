@@ -1,75 +1,80 @@
 import React, { useState } from "react";
-import { 
-  Header 
+import {
+  Header
 } from "./components/Header";
-import { 
-  AiToolsMarquee 
+import {
+  AiToolsMarquee
 } from "./components/AiToolsMarquee";
-import { 
-  UploadDropzone 
+import {
+  UploadDropzone
 } from "./components/UploadDropzone";
-import { 
-  PresetSelector 
+import {
+  PresetSelector
 } from "./components/PresetSelector";
-import { 
-  TranscriptTimeline 
+import {
+  TranscriptTimeline
 } from "./components/TranscriptTimeline";
-import { 
-  VideoPreviewPlayer 
+import {
+  VideoPreviewPlayer
 } from "./components/VideoPreviewPlayer";
-import { 
-  AdvancedSettings 
+import {
+  AdvancedSettings
 } from "./components/AdvancedSettings";
-import { 
-  ProcessingModal 
+import {
+  ProcessingModal
 } from "./components/ProcessingModal";
-import { 
-  TranscriptionModal 
+import {
+  TranscriptionModal
 } from "./components/TranscriptionModal";
-import { 
-  OutputResults 
+import {
+  OutputResults
 } from "./components/OutputResults";
-import { 
-  ProjectHistory 
+import {
+  ProjectHistory
 } from "./components/ProjectHistory";
-import { 
-  PRESETS 
+import {
+  TemplateCloneRemaker
+} from "./components/TemplateCloneRemaker";
+import {
+  PRESETS
 } from "./data/presets";
-import { 
-  DEFAULT_BROLL_ITEMS, 
-  CHANH_FULL_TRANSCRIPT 
+import {
+  DEFAULT_BROLL_ITEMS,
+  CHANH_FULL_TRANSCRIPT
 } from "./data/brollAndTranscript";
-import { 
-  AspectRatio, 
-  AdvancedSettingsConfig, 
-  Preset, 
-  VideoSource, 
+import {
+  AspectRatio,
+  AdvancedSettingsConfig,
+  Preset,
+  VideoSource,
   ProjectHistoryItem,
   TranscriptSegment,
-  BrollItem 
+  BrollItem,
+  StudioMode
 } from "./types";
 import { parseCustomScript, analyzeRawVideo } from "./lib/videoAnalysis";
-import { 
-  Sparkles, 
-  Crown, 
-  Check, 
-  X, 
-  ArrowRight, 
-  Zap, 
-  Wand2, 
-  FileText, 
-  Film, 
-  Sliders 
+import {
+  Sparkles,
+  Crown,
+  Check,
+  X,
+  ArrowRight,
+  Zap,
+  Wand2,
+  FileText,
+  Film,
+  Sliders
 } from "lucide-react";
 
 export function App() {
+  const [studioMode, setStudioMode] = useState<StudioMode>("superpower");
   const [currentVideo, setCurrentVideo] = useState<VideoSource | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<Preset>(PRESETS[0]);
   const [segments, setSegments] = useState<TranscriptSegment[]>(CHANH_FULL_TRANSCRIPT);
   const [brollList, setBrollList] = useState<BrollItem[]>(DEFAULT_BROLL_ITEMS);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<"transcript" | "presets" | "settings">("transcript");
-  
+
   // Dynamic video metadata
   const [videoTitle, setVideoTitle] = useState<string>("GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN");
   const [speakerBadge, setSpeakerBadge] = useState<string>("CÔ HẠNH CHIA SẺ");
@@ -161,6 +166,44 @@ export function App() {
     }
   };
 
+  const handleAutoPilotSuperpower = (sampleVideo?: VideoSource) => {
+    const targetVideo = sampleVideo || currentVideo || {
+      id: "sample-chi-hanh-superpower",
+      name: "⚡ SIÊU PHẨM HOÀN CHỈNH: Cô Hạnh — Giải Oan Vừa Học Vừa Làm (Agent Tổng Tự Duyệt)",
+      url: "/samples/sample-chi-hanh-superpower.mp4",
+      size: 18707146,
+      duration: 45,
+      isSample: true,
+      isChanhSample: true,
+      videoTitle: "GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN",
+      speakerBadge: "CÔ HẠNH NGUYÊN",
+      hookOpening: "HỆ VỪA HỌC VỪA LÀM Ở ĐÀI LOAN CHỈ CẤP BẰNG NGHỀ THÔI Ạ?",
+      transcript: CHANH_FULL_TRANSCRIPT,
+    };
+
+    setCurrentVideo(targetVideo);
+    setVideoTitle(targetVideo.videoTitle || "GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN");
+    setSpeakerBadge(targetVideo.speakerBadge || "CÔ HẠNH NGUYÊN");
+    setSegments(targetVideo.transcript || CHANH_FULL_TRANSCRIPT);
+    setSelectedPreset(PRESETS[0]); // Chuyên gia Cô Hạnh
+
+    setSettings((prev) => ({
+      ...prev,
+      skinGlow: true,
+      speed: 1.13,
+      subtitlesEnabled: true,
+      subtitleStyle: "chanh",
+      highlightKeywordColor: "rose",
+      showHeadlinePlate: true,
+      showInfoCards: true,
+      enableDynamicZoomLadder: true,
+      enableBrollCutaways: true,
+      duckingLevel: 85,
+    }));
+
+    setIsProcessing(true);
+  };
+
   const handleReTranscribe = () => {
     if (!currentVideo) return;
     setPendingVideo(currentVideo);
@@ -195,7 +238,7 @@ export function App() {
   const handleApplyCustomScript = (scriptText: string) => {
     const dur = currentVideo?.duration || 30;
     const newSegs = parseCustomScript(scriptText, dur);
-    
+
     // Auto-enrich segments with matching B-Rolls based on text keywords
     const enriched = newSegs.map((s, idx) => {
       const text = s.text.toLowerCase();
@@ -308,14 +351,52 @@ export function App() {
           const el = document.getElementById("project-history-section");
           el?.scrollIntoView({ behavior: "smooth" });
         }}
+        studioMode={studioMode}
+        onSelectStudioMode={(mode) => setStudioMode(mode)}
       />
 
       {/* AI Tools Marquee Ribbon */}
       <AiToolsMarquee onSelectTool={(tool) => showToast(`Tính năng AI "${tool}" đã sẵn sàng.`)} />
 
+      {/* Mobile Mode Switcher Bar */}
+      <div className="md:hidden mx-auto max-w-7xl px-4 pt-3">
+        <div className="flex items-center rounded-xl border border-zinc-800 bg-panel/90 p-1 shadow-inner">
+          <button
+            onClick={() => setStudioMode("superpower")}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              studioMode === "superpower"
+                ? "bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md shadow-pink-500/20"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            <Sparkles className="size-3.5" />
+            <span>⚡ Agent Tổng Superpower</span>
+          </button>
+
+          <button
+            onClick={() => setStudioMode("template-clone")}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              studioMode === "template-clone"
+                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-black shadow-md shadow-amber-500/20"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            <Sparkles className="size-3.5" />
+            <span>🎬 Clone Từ Link Mẫu + Ảnh</span>
+          </button>
+        </div>
+      </div>
+
       {/* Main Content Area */}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        {hasRenderedOutput && currentVideo ? (
+        {studioMode === "template-clone" ? (
+          /* View A: Template Clone & Persona Remaker */
+          <TemplateCloneRemaker
+            onApplyFinishedVideo={(videoUrl, title) => {
+              showToast(`Đã xuất bản video theo mẫu: ${title}`);
+            }}
+          />
+        ) : hasRenderedOutput && currentVideo ? (
           /* View 1: Master Professional Output */
           <OutputResults
             sourceVideo={{ ...currentVideo, videoTitle, speakerBadge }}
@@ -331,6 +412,7 @@ export function App() {
               onSelectVideo={handleSelectVideo}
               onClearVideo={() => setCurrentVideo(null)}
               onReTranscribe={handleReTranscribe}
+              onAutoPilotSuperpower={handleAutoPilotSuperpower}
             />
 
             {/* Split Workspace */}
@@ -341,11 +423,10 @@ export function App() {
                 <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
                   <button
                     onClick={() => setActiveTab("transcript")}
-                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
-                      activeTab === "transcript"
+                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${activeTab === "transcript"
                         ? "bg-pink-500 text-white shadow-md shadow-pink-500/20"
                         : "text-zinc-400 hover:text-white hover:bg-panel"
-                    }`}
+                      }`}
                   >
                     <FileText className="size-3.5" />
                     <span>1. Lời Thoại Gốc & Cảnh Trám ({segments.length} câu)</span>
@@ -353,11 +434,10 @@ export function App() {
 
                   <button
                     onClick={() => setActiveTab("presets")}
-                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
-                      activeTab === "presets"
+                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${activeTab === "presets"
                         ? "bg-pink-500 text-white shadow-md shadow-pink-500/20"
                         : "text-zinc-400 hover:text-white hover:bg-panel"
-                    }`}
+                      }`}
                   >
                     <Sparkles className="size-3.5" />
                     <span>2. Phong Cách & Preset</span>
@@ -365,11 +445,10 @@ export function App() {
 
                   <button
                     onClick={() => setActiveTab("settings")}
-                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
-                      activeTab === "settings"
+                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${activeTab === "settings"
                         ? "bg-pink-500 text-white shadow-md shadow-pink-500/20"
                         : "text-zinc-400 hover:text-white hover:bg-panel"
-                    }`}
+                      }`}
                   >
                     <Sliders className="size-3.5" />
                     <span>3. Tinh Chỉnh Studio</span>
@@ -469,6 +548,7 @@ export function App() {
               currentVideo={null}
               onSelectVideo={handleSelectVideo}
               onClearVideo={() => setCurrentVideo(null)}
+              onAutoPilotSuperpower={handleAutoPilotSuperpower}
             />
 
             {/* Presets Showcase Section */}

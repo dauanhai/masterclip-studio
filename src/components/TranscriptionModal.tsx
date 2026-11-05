@@ -330,3 +330,4 @@ export const TranscriptionModal: React.FC<TranscriptionModalProps> = ({
     </div>
   );
 };
+

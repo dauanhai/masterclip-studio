@@ -20,9 +20,23 @@ interface UploadDropzoneProps {
   onSelectVideo: (video: VideoSource) => void;
   onClearVideo: () => void;
   onReTranscribe?: () => void;
+  onAutoPilotSuperpower?: (sampleVideo: VideoSource) => void;
 }
 
 const SAMPLE_VIDEOS: VideoSource[] = [
+  {
+    id: "sample-chi-hanh-superpower",
+    name: "⚡ SIÊU PHẨM HOÀN CHỈNH: Cô Hạnh — Giải Oan Vừa Học Vừa Làm (Agent Tổng Tự Duyệt)",
+    url: "/samples/sample-chi-hanh-superpower.mp4",
+    size: 18707146,
+    duration: 45,
+    isSample: true,
+    isChanhSample: true,
+    videoTitle: "GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN",
+    speakerBadge: "CÔ HẠNH NGUYÊN",
+    hookOpening: "HỆ VỪA HỌC VỪA LÀM Ở ĐÀI LOAN CHỈ CẤP BẰNG NGHỀ THÔI Ạ?",
+    transcript: CHANH_FULL_TRANSCRIPT,
+  },
   {
     id: "sample-chanh-expert",
     name: "Mẫu 1: Cô Hạnh — Giải Oan Hệ Vừa Học Vừa Làm (Bản Dựng Chuẩn 9:16)",
@@ -80,6 +94,7 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
   onSelectVideo,
   onClearVideo,
   onReTranscribe,
+  onAutoPilotSuperpower,
 }) => {
   const [urlInput, setUrlInput] = useState("");
   const [isDragging, setIsDragging] = useState(false);
@@ -176,6 +191,40 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
     <div className="w-full">
       {!currentVideo ? (
         <div className="mx-auto max-w-3xl">
+          {/* SUPERPOWER AGENT TỔNG 1-CLICK HERO CARD */}
+          <div className="relative overflow-hidden rounded-2xl border-2 border-pink-500/70 bg-gradient-to-r from-pink-950/50 via-zinc-900 to-amber-950/40 p-5 mb-6 shadow-2xl shadow-pink-500/15">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1 rounded-full bg-pink-500 px-2.5 py-0.5 text-[10px] font-black text-white uppercase tracking-wider shadow">
+                    ⚡ SUPERPOWER AGENT TỔNG
+                  </span>
+                  <span className="text-xs font-bold text-amber-300">
+                    Tự Làm Tự Duyệt 100%
+                  </span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-white">
+                  Cắt Thừa 11.4s • Tăng Tốc 1.13x • B-Roll • Korean Glow Da Mịn
+                </h3>
+                <p className="text-xs text-zinc-300 max-w-xl">
+                  Chỉ cần 1 click, AI tự động biên tập toàn diện theo chuẩn chuyên gia Cô Hạnh, tự động kiểm tra QC âm lượng & safe-zone. Bạn chỉ việc xem thành quả!
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  onAutoPilotSuperpower
+                    ? onAutoPilotSuperpower(SAMPLE_VIDEOS[0])
+                    : onSelectVideo(SAMPLE_VIDEOS[0])
+                }
+                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white font-extrabold text-xs shadow-lg shadow-pink-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+              >
+                <Sparkles className="size-4 animate-spin" />
+                <span>KÍCH HOẠT TỰ LÀM TỰ DUYỆT</span>
+              </button>
+            </div>
+          </div>
+
           {/* Main Dropzone Card */}
           <div className="relative rounded-2xl border border-zinc-800 bg-card/90 p-5 shadow-2xl backdrop-blur-sm sm:p-7">
             <div className="absolute -top-16 left-1/2 -z-10 h-32 w-80 -translate-x-1/2 bg-pink-500/15 blur-3xl rounded-full pointer-events-none" />
