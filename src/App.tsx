@@ -24,6 +24,9 @@ import {
   ProcessingModal 
 } from "./components/ProcessingModal";
 import { 
+  TranscriptionModal 
+} from "./components/TranscriptionModal";
+import { 
   OutputResults 
 } from "./components/OutputResults";
 import { 
@@ -78,6 +81,15 @@ export function App() {
   const [showPricingModal, setShowPricingModal] = useState<boolean>(false);
   const [toastNotice, setToastNotice] = useState<string | null>(null);
 
+  // AI Speech-to-Text Transcription Modal State
+  const [showTranscriptionModal, setShowTranscriptionModal] = useState<boolean>(false);
+  const [pendingVideo, setPendingVideo] = useState<VideoSource | null>(null);
+  const [pendingAnalysis, setPendingAnalysis] = useState<{
+    title: string;
+    badge: string;
+    segments: TranscriptSegment[];
+  } | null>(null);
+
   const [settings, setSettings] = useState<AdvancedSettingsConfig>({
     aspectRatio: "9:16",
     safeZone: true,
@@ -113,13 +125,51 @@ export function App() {
   };
 
   const handleSelectVideo = (v: VideoSource) => {
-    setCurrentVideo(v);
-    if (v.videoTitle) setVideoTitle(v.videoTitle);
-    if (v.speakerBadge) setSpeakerBadge(v.speakerBadge);
-    if (v.transcript && v.transcript.length > 0) {
-      setSegments(v.transcript);
+    const analysis = analyzeRawVideo(v.name, v.duration);
+    const title = v.videoTitle || analysis.title;
+    const badge = v.speakerBadge || analysis.badge;
+    const segs = v.transcript && v.transcript.length > 0 ? v.transcript : analysis.segments;
+
+    setPendingVideo(v);
+    setPendingAnalysis({
+      title,
+      badge,
+      segments: segs,
+    });
+    setShowTranscriptionModal(true);
+  };
+
+  const handleConfirmTranscription = (data: {
+    videoTitle: string;
+    speakerBadge: string;
+    segments: TranscriptSegment[];
+  }) => {
+    if (pendingVideo) {
+      const updated: VideoSource = {
+        ...pendingVideo,
+        videoTitle: data.videoTitle,
+        speakerBadge: data.speakerBadge,
+        transcript: data.segments,
+      };
+      setCurrentVideo(updated);
+      setVideoTitle(data.videoTitle);
+      setSpeakerBadge(data.speakerBadge);
+      setSegments(data.segments);
+      setHasRenderedOutput(false);
+      setShowTranscriptionModal(false);
+      showToast(`Đã xác nhận ${data.segments.length} câu thoại gốc! Toàn bộ video sẽ edit theo lời thoại này.`);
     }
-    setHasRenderedOutput(false);
+  };
+
+  const handleReTranscribe = () => {
+    if (!currentVideo) return;
+    setPendingVideo(currentVideo);
+    setPendingAnalysis({
+      title: videoTitle,
+      badge: speakerBadge,
+      segments,
+    });
+    setShowTranscriptionModal(true);
   };
 
   const handleSelectPreset = (preset: Preset) => {
@@ -280,6 +330,7 @@ export function App() {
               currentVideo={currentVideo}
               onSelectVideo={handleSelectVideo}
               onClearVideo={() => setCurrentVideo(null)}
+              onReTranscribe={handleReTranscribe}
             />
 
             {/* Split Workspace */}
@@ -340,6 +391,7 @@ export function App() {
                     onSeek={(time) => setCurrentTime(time)}
                     onAutoAssignBroll={handleAutoAssignBroll}
                     onUploadCustomBroll={handleUploadCustomBroll}
+                    onReTranscribe={handleReTranscribe}
                   />
                 )}
 
@@ -437,54 +489,53 @@ export function App() {
                     onClick={() => {
                       if (p.id === "chanh-expert") {
                         handleSelectVideo({
-                          id: "sample-chanh",
-                          name: "Mẫu 1: Cô Hạnh — Giải Oan Du Học Đài Loan",
-                          url: "/samples/chanh-source.mp4",
-                          size: 10718522,
-                          duration: 31,
+                          id: "sample-chanh-expert",
+                          name: "Mẫu 1: Cô Hạnh — Giải Oan Hệ Vừa Học Vừa Làm (Bản Dựng Chuẩn 9:16)",
+                          url: "/samples/sample-expert-master.mp4",
+                          size: 12940288,
+                          duration: 26,
                           isSample: true,
                           isChanhSample: true,
                           videoTitle: "GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN",
-                          speakerBadge: "CÔ HẠNH CHIA SẺ",
+                          speakerBadge: "CÔ HẠNH NGUYÊN",
                           hookOpening: "HỆ VỪA HỌC VỪA LÀM Ở ĐÀI LOAN CHỈ CẤP BẰNG NGHỀ THÔI Ạ?",
                           transcript: CHANH_FULL_TRANSCRIPT,
                         });
                       } else if (p.id === "hero-neon" || p.id === "podcast-authority") {
+                        handleSelectVideo({
+                          id: "sample-hoso",
+                          name: "Mẫu 2: Cô Hạnh Nguyên — Hồ Sơ Báo Danh Du Học Đài Loan Cần Có Là Gì?",
+                          url: "/samples/sample-reel-authority.mp4",
+                          size: 10957808,
+                          duration: 23,
+                          isSample: true,
+                          isChanhSample: true,
+                          videoTitle: "HỒ SƠ BÁO DANH DU HỌC ĐÀI LOAN CẦN CÓ LÀ GÌ?",
+                          speakerBadge: "CÔ HẠNH NGUYÊN",
+                          hookOpening: "HỒ SƠ BÁO DANH DU HỌC ĐÀI LOAN CẦN CHUẨN BỊ NHỮNG GÌ?",
+                          transcript: analyzeRawVideo("ho-so-bao-danh-du-hoc-dai-loan.mp4", 23).segments,
+                        });
+                      } else if (p.id === "ecommerce-review") {
+                        handleSelectVideo({
+                          id: "sample-viral-pro",
+                          name: "Mẫu 3: Video Hoàn Chỉnh Viral — Phụ Đề Nổi Bật & Cảnh Trám Điện Ảnh",
+                          url: "/samples/sample-viral-complete.mp4",
+                          size: 11192925,
+                          duration: 27,
+                          isSample: true,
+                          videoTitle: "BÍ QUYẾT XÂY KÊNH CHUYÊN GIA TRIỆU VIEW",
+                          speakerBadge: "MASTER CREATOR",
+                          hookOpening: "TẠI SAO NHIỀU NGƯỜI LÀM VIDEO MÃI KHÔNG LÊN XU HƯỚNG?",
+                          transcript: analyzeRawVideo("xay-kenh-chuyen-gia.mp4", 27).segments,
+                        });
+                      } else {
                         const analysis = analyzeRawVideo("tai-chinh.mp4", 32);
                         handleSelectVideo({
                           id: "sample-finance",
-                          name: "Mẫu 2: Tài Chính — 3 Tư Duy Bật Tăng Thu Nhập",
+                          name: "Mẫu 4: Tài Chính & Doanh Nghiệp — 3 Tư Duy Bật Tăng Thu Nhập",
                           url: "/samples/sample1.mp4",
                           size: 2512258,
                           duration: 32,
-                          isSample: true,
-                          videoTitle: analysis.title,
-                          speakerBadge: analysis.badge,
-                          hookOpening: analysis.hookOpening,
-                          transcript: analysis.segments,
-                        });
-                      } else if (p.id === "ecommerce-review") {
-                        const analysis = analyzeRawVideo("review-san-pham.mp4", 28);
-                        handleSelectVideo({
-                          id: "sample-review",
-                          name: "Mẫu 4: Review Sản Phẩm — Đáng Đồng Tiền Bát Gạo Hay Không?",
-                          url: "/samples/sample3.mp4",
-                          size: 2770846,
-                          duration: 28,
-                          isSample: true,
-                          videoTitle: analysis.title,
-                          speakerBadge: analysis.badge,
-                          hookOpening: analysis.hookOpening,
-                          transcript: analysis.segments,
-                        });
-                      } else {
-                        const analysis = analyzeRawVideo("ai-cong-nghe.mp4", 35);
-                        handleSelectVideo({
-                          id: "sample-tech",
-                          name: "Mẫu 3: Công Nghệ AI — Bí Quyết Sử Dụng AI Đỉnh Cao",
-                          url: "/samples/sample2.mp4",
-                          size: 2580221,
-                          duration: 35,
                           isSample: true,
                           videoTitle: analysis.title,
                           speakerBadge: analysis.badge,
@@ -547,6 +598,19 @@ export function App() {
           </div>
         </div>
       </footer>
+
+      {/* AI Speech-to-Text Transcription Modal (Bước 1: Trích xuất lời thoại gốc) */}
+      {pendingVideo && pendingAnalysis && (
+        <TranscriptionModal
+          isOpen={showTranscriptionModal}
+          video={pendingVideo}
+          initialTitle={pendingAnalysis.title}
+          initialBadge={pendingAnalysis.badge}
+          initialSegments={pendingAnalysis.segments}
+          onConfirm={handleConfirmTranscription}
+          onCancel={() => setShowTranscriptionModal(false)}
+        />
+      )}
 
       {/* AI Processing Modal Stepper */}
       {currentVideo && (

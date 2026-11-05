@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { 
-  Sparkles, 
-  Download, 
-  Play, 
-  FileText, 
-  Share2, 
-  Check, 
-  Flame, 
-  ExternalLink, 
+import {
+  Sparkles,
+  Download,
+  Play,
+  FileText,
+  Share2,
+  Check,
+  Flame,
+  ExternalLink,
   RotateCcw,
   CheckCircle2,
   Crown,

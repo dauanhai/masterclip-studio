@@ -17,7 +17,8 @@ import {
   Trash2,
   ClipboardPaste,
   Type,
-  BadgeAlert
+  BadgeAlert,
+  Mic
 } from "lucide-react";
 import { TranscriptSegment, BrollItem } from "../types";
 import { formatTime } from "../lib/utils";
@@ -35,6 +36,7 @@ interface TranscriptTimelineProps {
   onSeek: (time: number) => void;
   onAutoAssignBroll: () => void;
   onUploadCustomBroll: (file: File) => void;
+  onReTranscribe?: () => void;
 }
 
 export const TranscriptTimeline: React.FC<TranscriptTimelineProps> = ({
@@ -50,6 +52,7 @@ export const TranscriptTimeline: React.FC<TranscriptTimelineProps> = ({
   onSeek,
   onAutoAssignBroll,
   onUploadCustomBroll,
+  onReTranscribe,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [customBrollNotice, setCustomBrollNotice] = useState<string | null>(null);
@@ -141,6 +144,17 @@ export const TranscriptTimeline: React.FC<TranscriptTimelineProps> = ({
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          {onReTranscribe && (
+            <button
+              onClick={onReTranscribe}
+              className="flex items-center gap-1.5 rounded-lg border border-pink-500/40 bg-pink-950/40 px-3 py-1.5 text-xs font-bold text-pink-300 hover:bg-pink-500 hover:text-white transition-all shadow-md shadow-pink-500/10"
+              title="Kích hoạt quét lại toàn bộ âm thanh & lời thoại bằng AI"
+            >
+              <Mic className="size-3.5 text-pink-400" />
+              <span>🎙️ Quét Lại Lời Thoại AI</span>
+            </button>
+          )}
+
           <button
             onClick={() => setShowPasteModal(true)}
             className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-panel px-3 py-1.5 text-xs font-bold text-zinc-200 hover:border-pink-500 hover:text-white transition-all"

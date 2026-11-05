@@ -19,25 +19,51 @@ interface UploadDropzoneProps {
   currentVideo: VideoSource | null;
   onSelectVideo: (video: VideoSource) => void;
   onClearVideo: () => void;
+  onReTranscribe?: () => void;
 }
 
 const SAMPLE_VIDEOS: VideoSource[] = [
   {
-    id: "sample-chanh",
-    name: "Mẫu 1: Cô Hạnh — Giải Oan Du Học Đài Loan",
-    url: "/samples/chanh-source.mp4",
-    size: 10718522,
-    duration: 31,
+    id: "sample-chanh-expert",
+    name: "Mẫu 1: Cô Hạnh — Giải Oan Hệ Vừa Học Vừa Làm (Bản Dựng Chuẩn 9:16)",
+    url: "/samples/sample-expert-master.mp4",
+    size: 12940288,
+    duration: 26,
     isSample: true,
     isChanhSample: true,
     videoTitle: "GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN",
-    speakerBadge: "CÔ HẠNH CHIA SẺ",
+    speakerBadge: "CÔ HẠNH NGUYÊN",
     hookOpening: "HỆ VỪA HỌC VỪA LÀM Ở ĐÀI LOAN CHỈ CẤP BẰNG NGHỀ THÔI Ạ?",
     transcript: CHANH_FULL_TRANSCRIPT,
   },
   {
+    id: "sample-hoso",
+    name: "Mẫu 2: Cô Hạnh Nguyên — Hồ Sơ Báo Danh Du Học Đài Loan Cần Có Là Gì?",
+    url: "/samples/sample-reel-authority.mp4",
+    size: 10957808,
+    duration: 23,
+    isSample: true,
+    isChanhSample: true,
+    videoTitle: "HỒ SƠ BÁO DANH DU HỌC ĐÀI LOAN CẦN CÓ LÀ GÌ?",
+    speakerBadge: "CÔ HẠNH NGUYÊN",
+    hookOpening: "HỒ SƠ BÁO DANH DU HỌC ĐÀI LOAN CẦN CHUẨN BỊ NHỮNG GÌ?",
+    transcript: analyzeRawVideo("ho-so-bao-danh-du-hoc-dai-loan.mp4", 23).segments,
+  },
+  {
+    id: "sample-viral-pro",
+    name: "Mẫu 3: Video Hoàn Chỉnh Viral — Phụ Đề Nổi Bật & Cảnh Trám Điện Ảnh",
+    url: "/samples/sample-viral-complete.mp4",
+    size: 11192925,
+    duration: 27,
+    isSample: true,
+    videoTitle: "BÍ QUYẾT XÂY KÊNH CHUYÊN GIA TRIỆU VIEW",
+    speakerBadge: "MASTER CREATOR",
+    hookOpening: "TẠI SAO NHIỀU NGƯỜI LÀM VIDEO MÃI KHÔNG LÊN XU HƯỚNG?",
+    transcript: analyzeRawVideo("xay-kenh-chuyen-gia.mp4", 27).segments,
+  },
+  {
     id: "sample-finance",
-    name: "Mẫu 2: Tài Chính — 3 Tư Duy Bật Tăng Thu Nhập",
+    name: "Mẫu 4: Tài Chính & Doanh Nghiệp — 3 Tư Duy Bật Tăng Thu Nhập",
     url: "/samples/sample1.mp4",
     size: 2512258,
     duration: 32,
@@ -47,36 +73,13 @@ const SAMPLE_VIDEOS: VideoSource[] = [
     hookOpening: "TẠI SAO NGƯỜI GIÀU CÀNG LÀM CÀNG NHIỀU TIỀN VÀ TỰ DO?",
     transcript: analyzeRawVideo("tai-chinh.mp4", 32).segments,
   },
-  {
-    id: "sample-tech",
-    name: "Mẫu 3: Công Nghệ AI — Bí Quyết Kích Hoạt & Tiết Kiệm Thời Gian",
-    url: "/samples/sample2.mp4",
-    size: 2580221,
-    duration: 35,
-    isSample: true,
-    videoTitle: "BÍ QUYẾT CÀI ĐẶT & SỬ DỤNG AI ĐỈNH CAO",
-    speakerBadge: "CHUYÊN GIA CÔNG NGHỆ",
-    hookOpening: "3 BÍ QUYẾT SỬ DỤNG AI GIÚP BẠN TIẾT KIỆM 10 TIẾNG MỖI NGÀY",
-    transcript: analyzeRawVideo("ai-chatgpt.mp4", 35).segments,
-  },
-  {
-    id: "sample-review",
-    name: "Mẫu 4: Review Sản Phẩm — Đáng Đồng Tiền Bát Gạo Hay Không?",
-    url: "/samples/sample3.mp4",
-    size: 2770846,
-    duration: 28,
-    isSample: true,
-    videoTitle: "REVIEW THỰC TẾ: ĐÁNG ĐỒNG TIỀN BÁT GẠO HAY KHÔNG?",
-    speakerBadge: "REVIEW CHÂN THỰC",
-    hookOpening: "MÓN ĐỒ DƯỚI 200 CÀNG DÙNG CÀNG THẤY QUÁ LỜI!",
-    transcript: analyzeRawVideo("review-san-pham.mp4", 28).segments,
-  },
 ];
 
 export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
   currentVideo,
   onSelectVideo,
   onClearVideo,
+  onReTranscribe,
 }) => {
   const [urlInput, setUrlInput] = useState("");
   const [isDragging, setIsDragging] = useState(false);
@@ -373,6 +376,14 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {onReTranscribe && (
+              <button
+                onClick={onReTranscribe}
+                className="rounded-lg border border-pink-500/50 bg-pink-950/40 px-3 py-1.5 text-xs font-bold text-pink-300 hover:bg-pink-500 hover:text-white transition-all shadow-md shadow-pink-500/10"
+              >
+                🎙️ Bóc Tách Lại Lời Thoại AI
+              </button>
+            )}
             <button
               onClick={() => fileInputRef.current?.click()}
               className="rounded-lg border border-zinc-700 bg-panel px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-zinc-500 hover:text-white"

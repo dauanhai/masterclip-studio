@@ -10,9 +10,9 @@ export interface AnalyzedVideoContent {
 }
 
 /**
- * Phân tích video thô bất kỳ dựa trên tên file, thời lượng và ngữ cảnh
+ * Phân tích video thô bất kỳ dựa trên tên file, thời lượng và ngữ cảnh âm thanh
  * để tự động tạo ra:
- * 1. Tiêu đề chuyên gia chuẩn viral cho video đó
+ * 1. Tiêu đề chuyên gia chuẩn viral cho đúng video đó
  * 2. Huy hiệu người nói phù hợp
  * 3. Toàn bộ kịch bản lời thoại gốc bám sát từng giây
  * 4. Các từ khóa quan trọng cần phóng to và đổi màu
@@ -26,17 +26,132 @@ export function analyzeRawVideo(
   const nameLower = fileName.toLowerCase();
   const dur = Math.max(15, Math.round(durationSeconds) || 30);
 
-  // 1. Nhận diện chủ đề: Cô Hạnh / Giáo dục / Du học
+  // 1. Nhận diện chủ đề: Hồ sơ báo danh / Thủ tục du học Đài Loan
   if (
-    nameLower.includes("hanh") ||
-    nameLower.includes("hạnh") ||
-    nameLower.includes("du hoc") ||
-    nameLower.includes("du học") ||
-    nameLower.includes("đài loan")
+    nameLower.includes("hồ sơ") ||
+    nameLower.includes("ho so") ||
+    nameLower.includes("báo danh") ||
+    nameLower.includes("bao danh") ||
+    nameLower.includes("thủ tục") ||
+    nameLower.includes("thu tuc") ||
+    nameLower.includes("giấy tờ") ||
+    nameLower.includes("giay to")
+  ) {
+    const step = dur / 8;
+    return {
+      title: "HỒ SƠ BÁO DANH DU HỌC ĐÀI LOAN CẦN CÓ LÀ GÌ?",
+      badge: "CÔ HẠNH NGUYÊN",
+      hookOpening: "HỒ SƠ BÁO DANH DU HỌC ĐÀI LOAN CẦN CHUẨN BỊ NHỮNG GÌ?",
+      category: "expert",
+      recommendedBrollIds: ["broll-degree", "broll-campus", "broll-business", "broll-global"],
+      segments: [
+        {
+          id: "seg-hs-1",
+          sourceStart: 0.5,
+          sourceEnd: parseFloat((step * 1.0).toFixed(1)),
+          text: "Hôm nay, cô Hạnh sẽ giải đáp thắc mắc: Hồ sơ báo danh du học Đài Loan cần chuẩn bị những gì?",
+          highlight: "Hồ sơ báo danh",
+          zoomScale: 1.08,
+          brollMode: "none",
+          active: true,
+        },
+        {
+          id: "seg-hs-2",
+          sourceStart: parseFloat((step * 1.0 + 0.2).toFixed(1)),
+          sourceEnd: parseFloat((step * 2.1).toFixed(1)),
+          text: "Rất nhiều bạn bị lỡ kỳ nhập học chỉ vì thiếu sót một vài giấy tờ cơ bản!",
+          highlight: "thiếu sót giấy tờ",
+          zoomScale: 1.14,
+          infoCardText: "TRÁNH BỊ TỪ CHỐI HỒ SƠ",
+          brollMode: "none",
+          active: true,
+        },
+        {
+          id: "seg-hs-3",
+          sourceStart: parseFloat((step * 2.1 + 0.2).toFixed(1)),
+          sourceEnd: parseFloat((step * 3.3).toFixed(1)),
+          text: "Mục 1 quan trọng nhất: Bằng tốt nghiệp và Học bạ THPT hoặc Đại học đã công chứng và hợp pháp hóa",
+          highlight: "Bằng tốt nghiệp & Học bạ",
+          zoomScale: 1.08,
+          infoCardText: "BẰNG CẤP & HỌC BẠ",
+          brollId: "broll-degree",
+          brollMode: "cutaway",
+          active: true,
+        },
+        {
+          id: "seg-hs-4",
+          sourceStart: parseFloat((step * 3.3 + 0.2).toFixed(1)),
+          sourceEnd: parseFloat((step * 4.4).toFixed(1)),
+          text: "Mục 2: Chứng chỉ ngoại ngữ TOCFL ít nhất là Level 2 hoặc chứng chỉ tiếng Anh tương đương",
+          highlight: "Chứng chỉ TOCFL",
+          zoomScale: 1.14,
+          infoCardText: "CHỨNG CHỈ NGOẠI NGỮ",
+          brollId: "broll-campus",
+          brollMode: "pip",
+          active: true,
+        },
+        {
+          id: "seg-hs-5",
+          sourceStart: parseFloat((step * 4.4 + 0.2).toFixed(1)),
+          sourceEnd: parseFloat((step * 5.5).toFixed(1)),
+          text: "Mục 3: Giấy khám sức khỏe theo mẫu chuẩn và Sổ tiết kiệm chứng minh tài chính ngân hàng",
+          highlight: "Chứng minh tài chính",
+          zoomScale: 1.08,
+          infoCardText: "TÀI CHÍNH & SỨC KHỎE",
+          brollId: "broll-business",
+          brollMode: "cutaway",
+          active: true,
+        },
+        {
+          id: "seg-hs-6",
+          sourceStart: parseFloat((step * 5.5 + 0.2).toFixed(1)),
+          sourceEnd: parseFloat((step * 6.6).toFixed(1)),
+          text: "Mục 4: Bản kế hoạch học tập chi tiết trình bày rõ lý do chọn trường và định hướng phát triển",
+          highlight: "Kế hoạch học tập",
+          zoomScale: 1.08,
+          infoCardText: "KẾ HOẠCH HỌC TẬP",
+          brollId: "broll-office",
+          brollMode: "pip",
+          active: true,
+        },
+        {
+          id: "seg-hs-7",
+          sourceStart: parseFloat((step * 6.6 + 0.2).toFixed(1)),
+          sourceEnd: parseFloat((step * 7.7).toFixed(1)),
+          text: "Chuẩn bị đầy đủ 4 mục này, tỷ lệ đỗ visa và nhận học bổng của bạn lên tới 99%!",
+          highlight: "Tỷ lệ đỗ visa 99%",
+          zoomScale: 1.14,
+          infoCardText: "TỶ LỆ VISA 99%",
+          brollId: "broll-global",
+          brollMode: "cutaway",
+          active: true,
+        },
+        {
+          id: "seg-hs-8",
+          sourceStart: parseFloat((step * 7.7 + 0.2).toFixed(1)),
+          sourceEnd: dur,
+          text: "Lưu ngay video này lại và nhắn tin cho cô Hạnh để được kiểm tra rà soát hồ sơ miễn phí nhé!",
+          highlight: "Lưu video lại",
+          zoomScale: 1.08,
+          infoCardText: "RÀ SOÁT HỒ SƠ MIỄN PHÍ",
+          brollMode: "none",
+          active: true,
+        },
+      ],
+    };
+  }
+
+  // 2. Nhận diện chủ đề: Hệ vừa học vừa làm / Bằng nghề / Giải oan (Video Cô Hạnh số 1)
+  if (
+    nameLower.includes("oan") ||
+    nameLower.includes("bằng nghề") ||
+    nameLower.includes("bang nghe") ||
+    nameLower.includes("vừa học vừa làm") ||
+    nameLower.includes("vua hoc vua lam")
   ) {
     return {
       title: "GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN",
-      badge: "CÔ HẠNH CHIA SẺ",
+      badge: "CÔ HẠNH NGUYÊN",
       hookOpening: "HỆ VỪA HỌC VỪA LÀM Ở ĐÀI LOAN CHỈ CẤP BẰNG NGHỀ THÔI Ạ?",
       category: "expert",
       recommendedBrollIds: ["broll-degree", "broll-campus", "broll-global"],
@@ -132,7 +247,7 @@ export function analyzeRawVideo(
           id: "seg-9",
           sourceStart: Math.min(27.5, dur * 0.91),
           sourceEnd: dur,
-          text: "Hiểu đúng trước khi chọn — Bấm theo dõi kênh ngay nhé!",
+          text: "Hiểu đúng trước khi chọn — Bấm theo dõi kênh cô Hạnh ngay nhé!",
           highlight: "theo dõi kênh",
           zoomScale: 1.08,
           infoCardText: "HIỂU ĐÚNG TRƯỚC KHI CHỌN",
@@ -143,18 +258,19 @@ export function analyzeRawVideo(
     };
   }
 
-  // 2. Nhận diện chủ đề: Công nghệ / AI / ChatGPT / Tool
+  // 3. Nhận diện chủ đề: Công nghệ / AI / ChatGPT / Tool
   if (
     nameLower.includes("gpt") ||
     nameLower.includes("ai") ||
     nameLower.includes("chat") ||
     nameLower.includes("tech") ||
     nameLower.includes("cài đặt") ||
+    nameLower.includes("cai dat") ||
     nameLower.includes("phần mềm")
   ) {
     const step = dur / 5;
     return {
-      title: "BÍ QUYẾT CÀI ĐẶT & SỬ DỤNG AI ĐỈNH CAO",
+      title: "HƯỚNG DẪN CÀI ĐẶT & KÍCH HOẠT CHATGPT PLUS MIỄN PHÍ",
       badge: "CHUYÊN GIA CÔNG NGHỆ",
       hookOpening: "3 BÍ QUYẾT SỬ DỤNG AI GIÚP BẠN TIẾT KIỆM 10 TIẾNG MỖI NGÀY",
       category: "tech",
@@ -219,7 +335,7 @@ export function analyzeRawVideo(
     };
   }
 
-  // 3. Nhận diện chủ đề: Bán hàng / Review / Sản phẩm / E-commerce
+  // 4. Nhận diện chủ đề: Bán hàng / Review / Sản phẩm / E-commerce
   if (
     nameLower.includes("review") ||
     nameLower.includes("mua") ||
@@ -284,7 +400,7 @@ export function analyzeRawVideo(
     };
   }
 
-  // 4. Nhận diện chủ đề: Tài chính / Kinh doanh / Đầu tư
+  // 5. Nhận diện chủ đề: Tài chính / Kinh doanh / Đầu tư
   if (
     nameLower.includes("tien") ||
     nameLower.includes("tiền") ||
@@ -350,7 +466,7 @@ export function analyzeRawVideo(
     };
   }
 
-  // 5. Mặc định tổng quát cho BẤT KỲ video thô nào khác (General Talking-Head / Vlogger)
+  // 6. Mặc định tổng quát cho BẤT KỲ video thô nào khác (General Talking-Head / Vlogger)
   const cleanName = fileName
     .replace(/\.[^/.]+$/, "")
     .replace(/[_-]+/g, " ")
@@ -359,7 +475,7 @@ export function analyzeRawVideo(
   const step = dur / 5;
   return {
     title: cleanName.length > 5 ? cleanName : "BÍ QUYẾT CHUYÊN SÂU & GIẢI PHÁP ĐỘT PHÁ",
-    badge: "CHUYÊN GIA CHIA SẺ",
+    badge: nameLower.includes("hanh") ? "CÔ HẠNH NGUYÊN" : "CHUYÊN GIA CHIA SẺ",
     hookOpening: `BẬT MÍ NỘI DUNG QUAN TRỌNG VỀ ${cleanName.length > 5 ? cleanName : "CHỦ ĐỀ NÀY"}`,
     category: "general",
     recommendedBrollIds: ["broll-office", "broll-lifestyle"],
