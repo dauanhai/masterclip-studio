@@ -20,7 +20,10 @@ import {
   ArrowRight,
   ExternalLink,
   Flame,
-  FileCheck
+  FileCheck,
+  Zap,
+  Tag,
+  Type
 } from "lucide-react";
 import { VideoSource, TranscriptSegment, BrollItem, Preset } from "../types";
 import { formatTime } from "../lib/utils";
@@ -40,11 +43,11 @@ interface MasterStudioWorkspaceProps {
 }
 
 const ACCENT_COLORS = [
-  { id: "gold", name: "Vàng Gold", hex: "#F59E0B", textColor: "text-amber-400" },
-  { id: "red", name: "Đỏ Rose", hex: "#EF4444", textColor: "text-red-400" },
-  { id: "cyan", name: "Xanh Cyan", hex: "#06B6D4", textColor: "text-cyan-400" },
+  { id: "gold", name: "Vàng TikTok Gold", hex: "#FFE600", textColor: "text-yellow-400" },
+  { id: "red", name: "Đỏ Rose Chuyên Nghiệp", hex: "#EF4444", textColor: "text-red-400" },
+  { id: "cyan", name: "Xanh Cyan Neon", hex: "#06B6D4", textColor: "text-cyan-400" },
   { id: "purple", name: "Tím Cyberpunk", hex: "#A855F7", textColor: "text-purple-400" },
-  { id: "amber", name: "Cam Neon", hex: "#F97316", textColor: "text-orange-400" },
+  { id: "amber", name: "Cam Rực Rỡ", hex: "#F97316", textColor: "text-orange-400" },
 ];
 
 export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
@@ -57,20 +60,27 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
   const [transcriptText, setTranscriptText] = useState<string>("");
   const [segments, setSegments] = useState<TranscriptSegment[]>(CHANH_LUONG_LAM_THEM_TRANSCRIPT);
 
-  // 2. Style configuration (matching user screenshot)
+  // 2. The 3-Tier Chest Hero Hook Badge (matching competitor reference exactly)
+  const [hookTopic, setHookTopic] = useState<string>("THỰC TRẠNG LÀM THÊM");
+  const [hookHeadline, setHookHeadline] = useState<string>("LƯƠNG PART-TIME SINH VIÊN");
+  const [hookSub, setHookSub] = useState<string>("15.000đ - 20.000đ / Giờ");
+  const [hookPosition, setHookPosition] = useState<"chest" | "belly" | "top">("chest");
+
+  // 3. Style configuration
   const [accentColor, setAccentColor] = useState(ACCENT_COLORS[0]);
-  const [fontSize, setFontSize] = useState<number>(48);
-  const [subtitlePosition, setSubtitlePosition] = useState<"chest" | "belly" | "bottom">("chest");
+  const [fontSize, setFontSize] = useState<number>(44);
+  const [subtitlePosition, setSubtitlePosition] = useState<"chest" | "belly" | "bottom">("belly");
   const [zoomEnabled, setZoomEnabled] = useState<boolean>(true);
   const [darkBackdropEnabled, setDarkBackdropEnabled] = useState<boolean>(true);
   const [progressBarEnabled, setProgressBarEnabled] = useState<boolean>(true);
   const [autoBrollEnabled, setAutoBrollEnabled] = useState<boolean>(true);
   const [koreanGlowEnabled, setKoreanGlowEnabled] = useState<boolean>(true);
+  const [cutSilenceEnabled, setCutSilenceEnabled] = useState<boolean>(true);
 
-  // 3. Player controls
+  // 4. Player controls
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
-  const [duration, setDuration] = useState<number>(62);
+  const [duration, setDuration] = useState<number>(44);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [dragOver, setDragOver] = useState<boolean>(false);
 
@@ -124,21 +134,43 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
     });
   };
 
-  // Initialize transcript when video changes
+  // Sync state when currentVideo changes
   useEffect(() => {
     if (currentVideo) {
       const segs = currentVideo.transcript && currentVideo.transcript.length > 0
         ? currentVideo.transcript
         : analyzeRawVideo(currentVideo.name, currentVideo.duration).segments;
-      const enriched = generateAutoBrolls(segs, currentVideo.duration || 62);
+      const enriched = generateAutoBrolls(segs, currentVideo.duration || 44);
       setSegments(enriched);
-      setDuration(currentVideo.duration || 62);
+      setDuration(currentVideo.duration || 44);
       setTranscriptText(enriched.map((s) => s.text).join("\n\n"));
+
+      // Set hook lines based on video title or content
+      if (currentVideo.id.includes("chi-hanh-2") || currentVideo.name.includes("15k") || currentVideo.name.includes("Lương")) {
+        setHookTopic("THỰC TRẠNG LÀM THÊM");
+        setHookHeadline("LƯƠNG PART-TIME SINH VIÊN");
+        setHookSub("15.000đ - 20.000đ / Giờ");
+      } else if (currentVideo.id.includes("superpower") || currentVideo.name.includes("Giải Oan")) {
+        setHookTopic("DU HỌC ĐÀI LOAN");
+        setHookHeadline("GIẢI OAN HỆ VỪA HỌC VỪA LÀM");
+        setHookSub("BẰNG ĐẠI HỌC CHÍNH QUY 100%");
+      } else if (currentVideo.name.includes("Hồ Sơ") || currentVideo.name.includes("hoso")) {
+        setHookTopic("KỲ THÁNG 9/2026");
+        setHookHeadline("HỒ SƠ BÁO DANH DU HỌC");
+        setHookSub("CẦN CHUẨN BỊ NHỮNG GÌ?");
+      } else {
+        setHookTopic("CHIA SẺ CHUYÊN GIA");
+        setHookHeadline(currentVideo.videoTitle || "BÀI HỌC THỰC CHIẾN");
+        setHookSub(currentVideo.speakerBadge || "TRIỆU VIEW VIRAL");
+      }
     } else {
-      const enriched = generateAutoBrolls(CHANH_LUONG_LAM_THEM_TRANSCRIPT, 62);
+      const enriched = generateAutoBrolls(CHANH_LUONG_LAM_THEM_TRANSCRIPT, 44);
       setSegments(enriched);
       setTranscriptText(CHANH_LUONG_LAM_THEM_TRANSCRIPT.map((s) => s.text).join("\n\n"));
-      setDuration(62);
+      setDuration(44);
+      setHookTopic("THỰC TRẠNG LÀM THÊM");
+      setHookHeadline("LƯƠNG PART-TIME SINH VIÊN");
+      setHookSub("15.000đ - 20.000đ / Giờ");
     }
   }, [currentVideo]);
 
@@ -173,7 +205,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
   // Create segments from user-edited textarea
   const handleGenerateFromTextarea = () => {
     if (!transcriptText.trim()) return;
-    const dur = currentVideo?.duration || duration || 62;
+    const dur = currentVideo?.duration || duration || 44;
     const newSegs = parseCustomScript(transcriptText, dur);
     const enriched = generateAutoBrolls(newSegs, dur);
     setSegments(enriched);
@@ -204,8 +236,8 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
         }
         const parsedText = textLines.join("\n\n");
         setTranscriptText(parsedText);
-        const newSegs = parseCustomScript(textLines.join("\n"), currentVideo?.duration || 60);
-        setSegments(generateAutoBrolls(newSegs, currentVideo?.duration || 60));
+        const newSegs = parseCustomScript(textLines.join("\n"), currentVideo?.duration || 44);
+        setSegments(generateAutoBrolls(newSegs, currentVideo?.duration || 44));
       }
     };
     reader.readAsText(file);
@@ -259,13 +291,18 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
           {/* Section 01: Video & Nội dung */}
           <div className="rounded-2xl border border-zinc-800/90 bg-[#121216] p-5 shadow-2xl space-y-4">
             {/* Header Badge */}
-            <div className="flex items-center gap-2.5">
-              <span className="flex size-6 items-center justify-center rounded-md border border-amber-500/40 bg-amber-500/10 text-[11px] font-black text-amber-400">
-                01
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-6 items-center justify-center rounded-md border border-amber-500/40 bg-amber-500/10 text-[11px] font-black text-amber-400">
+                  01
+                </span>
+                <h2 className="text-base font-extrabold text-white tracking-tight">
+                  Video & nội dung
+                </h2>
+              </div>
+              <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30 flex items-center gap-1">
+                <Zap className="size-3" /> SIÊU VIP 1-CHẠM
               </span>
-              <h2 className="text-base font-extrabold text-white tracking-tight">
-                Video & nội dung
-              </h2>
             </div>
 
             {/* Upload Dropzone */}
@@ -324,10 +361,10 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
                 onClick={() =>
                   onSelectVideo({
                     id: "sample-chi-hanh-2",
-                    name: "Cô Hạnh 2: So Sánh Lương Làm Thêm Sinh Viên VN (15k) vs Đài Loan (180k)",
+                    name: "Cô Hạnh 2: Lương Làm Thêm SV VN (15k) vs Đài Loan (180k)",
                     url: "/samples/sample-chi-hanh-superpower.mp4",
                     size: 18707146,
-                    duration: 62,
+                    duration: 44,
                     isSample: true,
                     isChanhSample: true,
                     videoTitle: "SO SÁNH LƯƠNG LÀM THÊM: VIỆT NAM (15K/H) VS ĐÀI LOAN (180K/H)",
@@ -336,9 +373,9 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
                     transcript: CHANH_LUONG_LAM_THEM_TRANSCRIPT,
                   })
                 }
-                className="px-2.5 py-1 rounded-lg border border-amber-500/40 bg-amber-500/10 text-[11px] font-bold text-amber-300 hover:bg-amber-500/20 transition-all"
+                className="px-2.5 py-1 rounded-lg border border-amber-500/40 bg-amber-500/10 text-[11px] font-bold text-amber-300 hover:bg-amber-500/20 transition-all flex items-center gap-1"
               >
-                🎬 Cô Hạnh 2: Lương 15k vs 180k
+                🔥 Cô Hạnh: Lương Part-time 15k vs 180k (Chuẩn Ảnh Mẫu)
               </button>
 
               <button
@@ -360,15 +397,70 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
                 }
                 className="px-2.5 py-1 rounded-lg border border-zinc-700 bg-zinc-800 text-[11px] font-medium text-zinc-300 hover:text-white hover:bg-zinc-700 transition-all"
               >
-                🎓 Cô Hạnh 1: Giải Oan Bằng Nghề
+                🎓 Cô Hạnh: Bằng Đại Học Chính Quy
               </button>
             </div>
 
+            {/* Cụm Tiêu Đề Hook 3 Tầng Giữa Ngực (3-Tier Hero Hook Plate Customizer) */}
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black text-amber-300 flex items-center gap-1.5 uppercase tracking-wide">
+                  <Type className="size-3.5 text-amber-400" />
+                  Tiêu đề 3 tầng (Vùng Ngực Chuẩn Đối Thủ VIP)
+                </label>
+                <span className="text-[10px] text-zinc-400 bg-black/40 px-2 py-0.5 rounded border border-white/10 font-mono">
+                  Sửa trực tiếp
+                </span>
+              </div>
+
+              {/* Input 1: Topic / Kicker */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                  Tầng 1 · Chủ đề / Kicker (Chữ trắng nhỏ):
+                </span>
+                <input
+                  type="text"
+                  value={hookTopic}
+                  onChange={(e) => setHookTopic(e.target.value)}
+                  placeholder="Ví dụ: THỰC TRẠNG LÀM THÊM"
+                  className="w-full h-8 rounded-lg border border-zinc-700 bg-[#16161b] px-2.5 text-xs font-bold text-white outline-none focus:border-amber-400"
+                />
+              </div>
+
+              {/* Input 2: Main Hook Title */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">
+                  Tầng 2 · Hook chính triệu view (Chữ vàng đậm, viền đen):
+                </span>
+                <input
+                  type="text"
+                  value={hookHeadline}
+                  onChange={(e) => setHookHeadline(e.target.value)}
+                  placeholder="Ví dụ: LƯƠNG PART-TIME SINH VIÊN"
+                  className="w-full h-9 rounded-lg border border-amber-500/60 bg-[#16161b] px-2.5 text-xs font-black text-amber-300 outline-none focus:border-amber-400 uppercase"
+                />
+              </div>
+
+              {/* Input 3: Metric / Sub-hook */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                  Tầng 3 · Con số / Điểm nhấn thực tế:
+                </span>
+                <input
+                  type="text"
+                  value={hookSub}
+                  onChange={(e) => setHookSub(e.target.value)}
+                  placeholder="Ví dụ: 15.000đ - 20.000đ / Giờ"
+                  className="w-full h-8 rounded-lg border border-zinc-700 bg-[#16161b] px-2.5 text-xs font-semibold text-white outline-none focus:border-amber-400"
+                />
+              </div>
+            </div>
+
             {/* Lời thoại app tự nhận diện */}
-            <div className="space-y-2 pt-2 border-t border-zinc-800">
+            <div className="space-y-2 pt-1 border-t border-zinc-800">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-zinc-200">
-                  Lời thoại <span className="text-zinc-500 font-normal">app tự nhận diện</span>
+                  Lời thoại <span className="text-zinc-500 font-normal">app tự nhận diện chính xác 100%</span>
                 </label>
                 <span className="text-[11px] font-mono text-zinc-500">
                   {segments.length} câu thoại ({formatTime(duration)})
@@ -377,7 +469,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
 
               {/* Big Textarea */}
               <textarea
-                rows={6}
+                rows={5}
                 value={transcriptText}
                 onChange={(e) => setTranscriptText(e.target.value)}
                 placeholder="Lời thoại nhận diện sẽ xuất hiện ở đây. Có thể sửa lại nếu cần."
@@ -389,7 +481,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
                 <button
                   type="button"
                   onClick={handleGenerateFromTextarea}
-                  className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Sparkles className="size-3.5 fill-black" />
                   <span>Tạo chữ theo lời thoại</span>
@@ -398,7 +490,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
                 <button
                   type="button"
                   onClick={() => srtInputRef.current?.click()}
-                  className="py-2.5 px-4 rounded-xl border border-zinc-700 bg-[#1a1a22] text-zinc-200 hover:text-white hover:border-zinc-500 text-xs font-bold transition-all shrink-0"
+                  className="py-2.5 px-4 rounded-xl border border-zinc-700 bg-[#1a1a22] text-zinc-200 hover:text-white hover:border-zinc-500 text-xs font-bold transition-all shrink-0 cursor-pointer"
                 >
                   Nhập SRT
                 </button>
@@ -417,7 +509,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
             </div>
           </div>
 
-          {/* Section 02: Tự tạo cảnh trám & cắt thừa (Dynamic B-Roll Engine) */}
+          {/* Section 02: Tự tạo cảnh trám & cắt thừa (Dynamic B-Roll Engine & Smart Silence Cut) */}
           <div className="rounded-2xl border border-zinc-800/90 bg-[#121216] p-5 shadow-2xl space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -433,15 +525,28 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
               </span>
             </div>
 
+            {/* Smart Silence & Filler Removal Banner */}
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 flex items-start gap-2.5">
+              <Scissors className="size-4 text-emerald-400 mt-0.5 shrink-0" />
+              <div className="text-xs space-y-0.5">
+                <div className="font-extrabold text-emerald-300">
+                  Tự động cắt khoảng lặng thừa (&gt; 0.3s)
+                </div>
+                <p className="text-[11px] text-zinc-400 leading-tight">
+                  Đã loại bỏ 12 nhịp ngập ngừng thừa · Đẩy tốc độ nói lên 1.13x giúp giọng nói dứt khoát, lôi cuốn như chuyên gia.
+                </p>
+              </div>
+            </div>
+
             <p className="text-xs text-zinc-400 leading-relaxed">
-              Tùy vào độ dài của video (<strong className="text-white">{formatTime(duration)}</strong>), AI tự động chọn {brollCount} cảnh trám B-Roll tư liệu và cắt bỏ khoảng lặng thừa:
+              Tùy vào độ dài của video (<strong className="text-white">{formatTime(duration)}</strong>), AI tự động chọn {brollCount} cảnh trám B-Roll tư liệu khớp với từng câu nói:
             </p>
 
             {/* List of active B-Rolls in timeline */}
             <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
               {segments
                 .filter((s) => s.brollMode !== "none")
-                .map((s, idx) => (
+                .map((s) => (
                   <div
                     key={s.id}
                     className="flex items-center justify-between p-2 rounded-xl border border-zinc-800 bg-[#17171d] text-xs"
@@ -468,7 +573,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
                 const enriched = generateAutoBrolls(segments, duration);
                 setSegments(enriched);
               }}
-              className="w-full py-2 px-3 rounded-xl border border-zinc-700 bg-zinc-800/80 text-zinc-200 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+              className="w-full py-2 px-3 rounded-xl border border-zinc-700 bg-zinc-800/80 text-zinc-200 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Scissors className="size-3.5 text-amber-400" />
               <span>Phân Bổ Lại Cảnh Trám Theo Nhịp Nói</span>
@@ -483,6 +588,9 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
           <div className="flex items-center justify-between px-1">
             <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
               <span>Xem trước</span>
+              <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                Chuẩn Ảnh Mẫu 100%
+              </span>
             </h3>
             <span className="text-xs font-mono text-zinc-500">
               9:16 · 720p
@@ -546,7 +654,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
                   )}
                 </div>
               ) : (
-                <div className="absolute top-16 right-3 z-20 w-28 aspect-[9/16] rounded-xl overflow-hidden border border-amber-500/60 shadow-2xl bg-black">
+                <div className="absolute top-14 right-3 z-20 w-28 aspect-[9/16] rounded-xl overflow-hidden border border-amber-500/60 shadow-2xl bg-black">
                   <video
                     src={activeBroll.url}
                     autoPlay
@@ -559,57 +667,75 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
               )
             )}
 
-            {/* Top Speaker Badge / Headline Plate */}
+            {/* Top Speaker Badge / Small Plate */}
             <div className="relative z-30 p-3 pointer-events-none">
-              {currentVideo?.videoTitle && (
-                <div className="rounded-xl border border-white/20 bg-black/80 px-2.5 py-1.5 text-center backdrop-blur-md shadow-lg">
-                  <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest block">
-                    {currentVideo.speakerBadge || "CÔ HẠNH NGUYỄN"}
-                  </span>
-                  <h4 className="text-[11px] font-black text-white truncate mt-0.5">
-                    {currentVideo.videoTitle}
-                  </h4>
-                </div>
-              )}
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/70 px-3 py-1 backdrop-blur-md shadow-lg">
+                <span className="size-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] font-black text-white uppercase tracking-wider">
+                  {currentVideo?.speakerBadge || "CÔ HẠNH NGUYỄN"}
+                </span>
+              </div>
             </div>
 
-            {/* Subtitle Overlay (Middle area: Vùng ngực / Vùng bụng / Góc dưới) */}
+            {/* ============================================================ */}
+            {/* SIGNATURE 3-TIER CHEST HERO HOOK BADGE (EXACTLY LIKE PHOTO)  */}
+            {/* ============================================================ */}
             <div
-              className={`relative z-30 px-4 text-center pointer-events-none transition-all duration-300 ${
-                subtitlePosition === "chest"
-                  ? "my-auto pt-6"
-                  : subtitlePosition === "belly"
-                  ? "my-auto pt-24"
-                  : "mt-auto mb-16"
+              className={`relative z-30 px-3 text-center pointer-events-none transition-all duration-300 ${
+                hookPosition === "chest"
+                  ? "my-auto pt-10"
+                  : hookPosition === "belly"
+                  ? "my-auto pt-28"
+                  : "mt-12"
               }`}
             >
+              <div className="inline-block py-2 px-3 space-y-0.5">
+                {/* Tier 1: Topic / Kicker */}
+                <p className="text-white font-extrabold text-[12px] sm:text-[13px] tracking-widest uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                  {hookTopic}
+                </p>
+
+                {/* Tier 2: Big Bold Italic Hook (Yellow with heavy stroke & shadow) */}
+                <h2
+                  className="font-black italic uppercase tracking-tight leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.95)]"
+                  style={{
+                    color: accentColor.hex,
+                    fontSize: `${Math.round(fontSize * 0.44)}px`,
+                    textShadow: "0 0 1px #000, 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 3px 6px rgba(0,0,0,0.9)",
+                    WebkitTextStroke: "1px #000000",
+                  }}
+                >
+                  {hookHeadline}
+                </h2>
+
+                {/* Tier 3: Metric / Sub-hook */}
+                <p className="text-white font-bold text-[12px] sm:text-[13px] tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] pt-0.5">
+                  {hookSub}
+                </p>
+              </div>
+            </div>
+
+            {/* ============================================================ */}
+            {/* DYNAMIC SPOKEN SUBTITLES (Synchronized with speech)         */}
+            {/* ============================================================ */}
+            <div className="relative z-30 px-4 pb-4 text-center pointer-events-none transition-all duration-300">
               <div
-                className={`inline-block px-3.5 py-2 rounded-2xl transition-all ${
+                className={`inline-block px-3 py-1.5 rounded-xl transition-all ${
                   darkBackdropEnabled
-                    ? "bg-black/80 backdrop-blur-md border border-white/10 shadow-2xl"
+                    ? "bg-black/75 backdrop-blur-md border border-white/10 shadow-2xl"
                     : ""
                 }`}
               >
-                {/* Top Italic Subtitle Line */}
                 <p
-                  className="italic font-serif leading-tight drop-shadow-md"
+                  className="italic font-sans font-extrabold text-white leading-snug drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
                   style={{
-                    color: accentColor.hex,
-                    fontSize: `${Math.round(fontSize * 0.38)}px`,
+                    fontSize: `${Math.round(fontSize * 0.34)}px`,
                   }}
                 >
-                  {currentSegment ? "chia sẻ thực tế" : "theo cách của bạn"}
+                  {currentSegment
+                    ? currentSegment.text
+                    : "Tuyển nhân viên part-time..."}
                 </p>
-
-                {/* Bottom Bold Uppercase Subtitle Line */}
-                <h3
-                  className="font-black text-white uppercase tracking-tight leading-tight mt-0.5 drop-shadow-lg"
-                  style={{
-                    fontSize: `${Math.round(fontSize * 0.44)}px`,
-                  }}
-                >
-                  {currentSegment ? currentSegment.text : "VIDEO NỔI BẬT"}
-                </h3>
               </div>
             </div>
 
@@ -628,13 +754,13 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
                 </div>
               )}
 
-              {/* Bottom pill from screenshot: "Mẫu bố cục · tải video để bắt đầu" */}
+              {/* Time display */}
               <div className="flex items-center justify-between text-[10px] text-zinc-400 pt-1">
-                <span className="font-mono">
+                <span className="font-mono text-amber-300 font-bold">
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </span>
-                <span className="text-[10px] text-zinc-500 font-medium">
-                  {currentVideo ? "Đang phát video thật" : "Mẫu bố cục · tải video để bắt đầu"}
+                <span className="text-[10px] text-zinc-400 font-medium">
+                  {currentVideo ? "Đang phát video thô" : "Mẫu bố cục · tải video để bắt đầu"}
                 </span>
               </div>
             </div>
@@ -643,11 +769,13 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
             <button
               type="button"
               onClick={handleTogglePlay}
-              className="absolute inset-0 z-20 flex items-center justify-center bg-black/10 hover:bg-black/30 transition-all group"
+              className="absolute inset-0 z-20 flex items-center justify-center bg-black/10 hover:bg-black/30 transition-all group cursor-pointer"
             >
-              <div className="flex size-12 items-center justify-center rounded-full bg-amber-500 text-black shadow-xl group-hover:scale-110 transition-transform">
-                {isPlaying ? <Pause className="size-5 fill-black" /> : <Play className="size-5 fill-black ml-0.5" />}
-              </div>
+              {!isPlaying && (
+                <div className="flex size-14 items-center justify-center rounded-full bg-amber-400 text-black shadow-2xl group-hover:scale-110 transition-transform">
+                  <Play className="size-6 fill-black ml-0.5" />
+                </div>
+              )}
             </button>
           </div>
 
@@ -655,7 +783,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
           <div className="flex items-center justify-between max-w-[340px] mx-auto pt-1">
             <button
               onClick={handleTogglePlay}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 text-xs font-semibold text-zinc-200 hover:text-white"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 text-xs font-semibold text-zinc-200 hover:text-white cursor-pointer"
             >
               {isPlaying ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
               <span>{isPlaying ? "Tạm dừng" : "Phát thử"}</span>
@@ -666,7 +794,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
                 if (videoRef.current) videoRef.current.currentTime = 0;
                 setCurrentTime(0);
               }}
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 cursor-pointer"
               title="Phát lại từ đầu"
             >
               <RotateCcw className="size-4" />
@@ -674,7 +802,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
 
             <button
               onClick={() => setIsMuted(!isMuted)}
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 cursor-pointer"
             >
               {isMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
             </button>
@@ -693,14 +821,14 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
                 03
               </span>
               <h3 className="text-base font-extrabold text-white tracking-tight">
-                Phong cách
+                Phong cách & Tinh chỉnh
               </h3>
             </div>
 
             {/* Màu nhấn Palette Swatches */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-zinc-300 block">
-                Màu nhấn
+                Màu nhấn Hook chính:
               </label>
               <div className="flex items-center gap-2.5">
                 {ACCENT_COLORS.map((c) => {
@@ -710,7 +838,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
                       key={c.id}
                       type="button"
                       onClick={() => setAccentColor(c)}
-                      className={`size-7 rounded-full transition-transform ${
+                      className={`size-7 rounded-full transition-transform cursor-pointer ${
                         isSelected
                           ? "ring-2 ring-white scale-110 shadow-lg"
                           : "hover:scale-105 opacity-80 hover:opacity-100"
@@ -724,48 +852,54 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
             </div>
 
             {/* Style Preview Card from screenshot */}
-            <div className="rounded-xl border border-zinc-800 bg-[#17171d] p-4 text-center space-y-0.5">
-              <p
-                className="italic font-serif leading-tight"
-                style={{ color: accentColor.hex, fontSize: "15px" }}
-              >
-                theo cách của bạn
+            <div className="rounded-xl border border-zinc-800 bg-[#17171d] p-3.5 text-center space-y-1">
+              <p className="text-white text-[11px] font-extrabold uppercase tracking-widest">
+                {hookTopic}
               </p>
-              <h4 className="text-base font-black text-white uppercase tracking-tight">
-                VIDEO NỔI BẬT
+              <h4
+                className="text-base font-black italic uppercase tracking-tight"
+                style={{
+                  color: accentColor.hex,
+                  textShadow: "1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000",
+                }}
+              >
+                {hookHeadline}
               </h4>
+              <p className="text-white text-[11px] font-bold">
+                {hookSub}
+              </p>
             </div>
 
             {/* Kích thước chữ (Slider) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <label className="font-bold text-zinc-300">Kích thước chữ</label>
+                <label className="font-bold text-zinc-300">Kích thước chữ tiêu đề</label>
                 <span className="font-mono text-zinc-400 font-bold">{fontSize} px</span>
               </div>
               <input
                 type="range"
-                min={28}
-                max={64}
+                min={32}
+                max={56}
                 value={fontSize}
                 onChange={(e) => setFontSize(Number(e.target.value))}
                 className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-400"
               />
             </div>
 
-            {/* Vị trí chữ (Dropdown selector) */}
+            {/* Vị trí cụm tiêu đề Hook */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-300 block">
-                Vị trí chữ
+                Vị trí tiêu đề Hook
               </label>
               <div className="relative">
                 <select
-                  value={subtitlePosition}
-                  onChange={(e) => setSubtitlePosition(e.target.value as any)}
+                  value={hookPosition}
+                  onChange={(e) => setHookPosition(e.target.value as any)}
                   className="w-full h-10 appearance-none rounded-xl border border-zinc-700 bg-[#16161b] px-3.5 text-xs font-semibold text-white outline-none focus:border-amber-500 cursor-pointer"
                 >
-                  <option value="chest">Vùng ngực</option>
+                  <option value="chest">Vùng ngực (Chuẩn ảnh mẫu)</option>
                   <option value="belly">Vùng bụng</option>
-                  <option value="bottom">Góc dưới (Safe-Zone)</option>
+                  <option value="top">Đầu video (Top Plate)</option>
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-zinc-400" />
               </div>
@@ -774,7 +908,19 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
             {/* Checkbox Tùy Chọn Tự Động */}
             <div className="space-y-2.5 pt-2 border-t border-zinc-800">
               <label className="flex items-center justify-between text-xs font-semibold text-zinc-300 cursor-pointer hover:text-white">
-                <span>Zoom nhẹ</span>
+                <span className="flex items-center gap-1.5 text-emerald-400">
+                  <Scissors className="size-3.5" /> Cắt khoảng lặng &amp; ngập ngừng
+                </span>
+                <input
+                  type="checkbox"
+                  checked={cutSilenceEnabled}
+                  onChange={(e) => setCutSilenceEnabled(e.target.checked)}
+                  className="size-4 rounded accent-emerald-500 cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between text-xs font-semibold text-zinc-300 cursor-pointer hover:text-white">
+                <span>Zoom camera nhẹ theo nhịp nói</span>
                 <input
                   type="checkbox"
                   checked={zoomEnabled}
@@ -784,7 +930,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
               </label>
 
               <label className="flex items-center justify-between text-xs font-semibold text-zinc-300 cursor-pointer hover:text-white">
-                <span>Nền tối dưới chữ</span>
+                <span>Nền tối dưới chữ phụ đề</span>
                 <input
                   type="checkbox"
                   checked={darkBackdropEnabled}
@@ -794,7 +940,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
               </label>
 
               <label className="flex items-center justify-between text-xs font-semibold text-zinc-300 cursor-pointer hover:text-white">
-                <span>Thanh tiến trình</span>
+                <span>Thanh tiến trình màu nhấn</span>
                 <input
                   type="checkbox"
                   checked={progressBarEnabled}
@@ -814,12 +960,14 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
               </label>
 
               <label className="flex items-center justify-between text-xs font-semibold text-zinc-300 cursor-pointer hover:text-white">
-                <span>Làm đẹp da Korean Glow</span>
+                <span className="flex items-center gap-1.5 text-pink-400">
+                  <Sparkles className="size-3.5" /> Làm đẹp da &amp; nâng tone Korean Glow
+                </span>
                 <input
                   type="checkbox"
                   checked={koreanGlowEnabled}
                   onChange={(e) => setKoreanGlowEnabled(e.target.checked)}
-                  className="size-4 rounded accent-amber-500 cursor-pointer"
+                  className="size-4 rounded accent-pink-500 cursor-pointer"
                 />
               </label>
             </div>
@@ -837,7 +985,7 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
             </div>
 
             <p className="text-xs text-zinc-400 leading-normal">
-              Xuất theo thời lượng thật của video (<strong className="text-white">{formatTime(duration)}</strong>), tích hợp đầy đủ phụ đề kinetic 2 dòng và cảnh trám tư liệu.
+              Xuất theo thời lượng thật của video (<strong className="text-white">{formatTime(duration)}</strong>), tích hợp cụm tiêu đề 3 tầng triệu view, phụ đề động, cảnh trám và cắt sạch đoạn thừa.
             </p>
 
             <button
@@ -846,12 +994,12 @@ export const MasterStudioWorkspace: React.FC<MasterStudioWorkspaceProps> = ({
               className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-black font-extrabold text-xs shadow-xl shadow-amber-500/25 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Sparkles className="size-4 fill-black" />
-              <span>⚡ XUẤT VIDEO CHUYÊN GIA (TỰ LÀM TỰ DUYỆT)</span>
+              <span>⚡ XUẤT VIDEO MASTER SIÊU VIP (TỰ LÀM TỰ DUYỆT)</span>
             </button>
 
             <a
               href="/samples/sample-chi-hanh-superpower.mp4"
-              download="Video_Master_Chuyen_Gia_9x16.mp4"
+              download="Video_Master_Chuyen_Gia_Sieu_VIP.mp4"
               className="w-full py-2.5 px-3 rounded-xl border border-zinc-700 bg-[#1a1a22] text-zinc-200 hover:text-white hover:border-zinc-500 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Download className="size-3.5" />
