@@ -12,7 +12,11 @@ import {
 } from "lucide-react";
 import { VideoSource } from "../types";
 import { formatFileSize, formatTime } from "../lib/utils";
-import { CHANH_FULL_TRANSCRIPT } from "../data/brollAndTranscript";
+import {
+  CHANH_FULL_TRANSCRIPT,
+  CHANH_LUONG_LAM_THEM_TRANSCRIPT,
+  CHANH_HOSO_TRANSCRIPT,
+} from "../data/brollAndTranscript";
 import { analyzeRawVideo } from "../lib/videoAnalysis";
 
 interface UploadDropzoneProps {
@@ -25,8 +29,21 @@ interface UploadDropzoneProps {
 
 const SAMPLE_VIDEOS: VideoSource[] = [
   {
+    id: "sample-chi-hanh-2",
+    name: "Mẫu 1: Cô Hạnh — So Sánh Lương Làm Thêm Sinh Viên VN (15k) vs Đài Loan (180k)",
+    url: "/samples/sample-chi-hanh-superpower.mp4",
+    size: 18707146,
+    duration: 62,
+    isSample: true,
+    isChanhSample: true,
+    videoTitle: "SO SÁNH LƯƠNG LÀM THÊM: VIỆT NAM (15K/H) VS ĐÀI LOAN (180K/H)",
+    speakerBadge: "CÔ HẠNH NGUYÊN",
+    hookOpening: "TUYỂN NHÂN VIÊN PART-TIME LƯƠNG 15 - 20.000 MỘT GIỜ",
+    transcript: CHANH_LUONG_LAM_THEM_TRANSCRIPT,
+  },
+  {
     id: "sample-chi-hanh-superpower",
-    name: "⚡ SIÊU PHẨM HOÀN CHỈNH: Cô Hạnh — Giải Oan Vừa Học Vừa Làm (Agent Tổng Tự Duyệt)",
+    name: "Mẫu 2: Cô Hạnh — Giải Oan Hệ Vừa Học Vừa Làm (Bản Master Hoàn Chỉnh)",
     url: "/samples/sample-chi-hanh-superpower.mp4",
     size: 18707146,
     duration: 45,
@@ -38,21 +55,8 @@ const SAMPLE_VIDEOS: VideoSource[] = [
     transcript: CHANH_FULL_TRANSCRIPT,
   },
   {
-    id: "sample-chanh-expert",
-    name: "Mẫu 1: Cô Hạnh — Giải Oan Hệ Vừa Học Vừa Làm (Bản Dựng Chuẩn 9:16)",
-    url: "/samples/sample-expert-master.mp4",
-    size: 12940288,
-    duration: 26,
-    isSample: true,
-    isChanhSample: true,
-    videoTitle: "GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN",
-    speakerBadge: "CÔ HẠNH NGUYÊN",
-    hookOpening: "HỆ VỪA HỌC VỪA LÀM Ở ĐÀI LOAN CHỈ CẤP BẰNG NGHỀ THÔI Ạ?",
-    transcript: CHANH_FULL_TRANSCRIPT,
-  },
-  {
     id: "sample-hoso",
-    name: "Mẫu 2: Cô Hạnh Nguyên — Hồ Sơ Báo Danh Du Học Đài Loan Cần Có Là Gì?",
+    name: "Mẫu 3: Cô Hạnh — Hồ Sơ Báo Danh Du Học Đài Loan Cần Có Là Gì?",
     url: "/samples/sample-reel-authority.mp4",
     size: 10957808,
     duration: 23,
@@ -61,7 +65,7 @@ const SAMPLE_VIDEOS: VideoSource[] = [
     videoTitle: "HỒ SƠ BÁO DANH DU HỌC ĐÀI LOAN CẦN CÓ LÀ GÌ?",
     speakerBadge: "CÔ HẠNH NGUYÊN",
     hookOpening: "HỒ SƠ BÁO DANH DU HỌC ĐÀI LOAN CẦN CHUẨN BỊ NHỮNG GÌ?",
-    transcript: analyzeRawVideo("ho-so-bao-danh-du-hoc-dai-loan.mp4", 23).segments,
+    transcript: CHANH_HOSO_TRANSCRIPT,
   },
   {
     id: "sample-viral-pro",

@@ -40,7 +40,9 @@ import {
 } from "./data/presets";
 import {
   DEFAULT_BROLL_ITEMS,
-  CHANH_FULL_TRANSCRIPT
+  CHANH_FULL_TRANSCRIPT,
+  CHANH_LUONG_LAM_THEM_TRANSCRIPT,
+  CHANH_HOSO_TRANSCRIPT,
 } from "./data/brollAndTranscript";
 import {
   AspectRatio,

@@ -17,6 +17,11 @@ import {
 import { TranscriptSegment, VideoSource } from "../types";
 import { formatTime } from "../lib/utils";
 import { parseCustomScript } from "../lib/videoAnalysis";
+import {
+  CHANH_FULL_TRANSCRIPT,
+  CHANH_LUONG_LAM_THEM_TRANSCRIPT,
+  CHANH_HOSO_TRANSCRIPT,
+} from "../data/brollAndTranscript";
 
 interface TranscriptionModalProps {
   isOpen: boolean;
@@ -249,52 +254,74 @@ export const TranscriptionModal: React.FC<TranscriptionModalProps> = ({
               </div>
             </div>
 
+            {/* Quick Topic Presets Bar - Chọn Lời Thoại Gốc Chuẩn 100% */}
+            <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800">
+              <span className="text-[11px] font-bold text-zinc-400 pl-1 shrink-0">
+                ⚡ Chọn nhanh kịch bản gốc:
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setVideoTitle("SO SÁNH LƯƠNG LÀM THÊM: VIỆT NAM (15K/H) VS ĐÀI LOAN (180K/H)");
+                  setSpeakerBadge("CÔ HẠNH NGUYÊN");
+                  setSegments(CHANH_LUONG_LAM_THEM_TRANSCRIPT);
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-300 text-xs font-bold hover:bg-pink-500/30 transition-all cursor-pointer"
+              >
+                <span>🔥 Mẫu 2: Lương Part-time 15k vs 180k (Cô Hạnh)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setVideoTitle("GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN");
+                  setSpeakerBadge("CÔ HẠNH NGUYÊN");
+                  setSegments(CHANH_FULL_TRANSCRIPT);
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-bold hover:text-white hover:bg-zinc-700 transition-all cursor-pointer"
+              >
+                <span>🎓 Mẫu 1: Giải Oan Bằng Nghề</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setVideoTitle("HỒ SƠ BÁO DANH DU HỌC ĐÀI LOAN CẦN CÓ LÀ GÌ?");
+                  setSpeakerBadge("CÔ HẠNH NGUYÊN");
+                  setSegments(CHANH_HOSO_TRANSCRIPT);
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-bold hover:text-white hover:bg-zinc-700 transition-all cursor-pointer"
+              >
+                <span>📄 Mẫu 3: Hồ Sơ Báo Danh</span>
+              </button>
+            </div>
+
             {/* Dialogue Segments List */}
             <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 max-h-[340px]">
               {segments.map((seg, idx) => (
                 <div
                   key={seg.id}
-                  className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-card/40 p-2.5 hover:border-zinc-700 hover:bg-card/70 transition-all"
+                  className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-card/40 p-3 hover:border-zinc-700 hover:bg-card/70 transition-all"
                 >
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-pink-500/20 text-xs font-black text-pink-400">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-pink-500/20 text-xs font-black text-pink-400 mt-0.5">
                     {idx + 1}
                   </span>
                   
-                  <div className="text-[10px] font-mono font-bold text-zinc-500 shrink-0 w-24">
+                  <div className="text-[10px] font-mono font-bold text-zinc-500 shrink-0 w-24 pt-1">
                     {formatTime(seg.sourceStart)} ➔ {formatTime(seg.sourceEnd)}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    {editingId === seg.id ? (
-                      <input
-                        type="text"
-                        defaultValue={seg.text}
-                        onBlur={(e) => {
-                          handleUpdateSegmentText(seg.id, e.target.value);
-                          setEditingId(null);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            handleUpdateSegmentText(seg.id, (e.target as HTMLInputElement).value);
-                            setEditingId(null);
-                          }
-                        }}
-                        autoFocus
-                        className="w-full rounded border border-pink-500 bg-black px-2 py-0.5 text-xs text-white outline-none"
-                      />
-                    ) : (
-                      <div
-                        onClick={() => setEditingId(seg.id)}
-                        className="group/text flex items-center justify-between text-xs font-semibold text-zinc-200 cursor-pointer hover:text-white"
-                      >
-                        <span className="truncate">{seg.text}</span>
-                        <Edit3 className="size-3 text-zinc-500 opacity-0 group-hover/text:opacity-100 shrink-0 ml-2" />
-                      </div>
-                    )}
+                    <input
+                      type="text"
+                      value={seg.text}
+                      onChange={(e) => handleUpdateSegmentText(seg.id, e.target.value)}
+                      className="w-full rounded-lg border border-transparent bg-transparent hover:border-zinc-700 focus:border-pink-500 focus:bg-black px-2 py-1 text-xs font-semibold text-zinc-100 outline-none transition-all"
+                    />
                   </div>
 
                   {seg.infoCardText && (
-                    <span className="rounded bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[9px] font-extrabold text-amber-300 shrink-0 hidden sm:inline-block">
+                    <span className="rounded bg-amber-500/15 border border-amber-500/30 px-2 py-1 text-[9px] font-extrabold text-amber-300 shrink-0 hidden sm:inline-block mt-0.5">
                       ✦ {seg.infoCardText}
                     </span>
                   )}

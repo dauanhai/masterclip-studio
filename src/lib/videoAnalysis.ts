@@ -1,4 +1,9 @@
 import { TranscriptSegment, BrollItem } from "../types";
+import {
+  CHANH_FULL_TRANSCRIPT,
+  CHANH_LUONG_LAM_THEM_TRANSCRIPT,
+  CHANH_HOSO_TRANSCRIPT,
+} from "../data/brollAndTranscript";
 
 export interface AnalyzedVideoContent {
   title: string;
@@ -26,7 +31,44 @@ export function analyzeRawVideo(
   const nameLower = fileName.toLowerCase();
   const dur = Math.max(15, Math.round(durationSeconds) || 30);
 
-  // 1. Nhận diện chủ đề: Hồ sơ báo danh / Thủ tục du học Đài Loan
+  // 1. Nhận diện CHÍNH XÁC Video Cô Hạnh số 2: So sánh lương làm thêm sinh viên VN (15k-20k/h) vs Đài Loan (180k-200k/h)
+  if (
+    nameLower.includes("c hanh 2") ||
+    nameLower.includes("c_hanh_2") ||
+    nameLower.includes("c_hanh 2") ||
+    nameLower.includes("c hanh_2") ||
+    nameLower.includes("chanh 2") ||
+    nameLower.includes("chi hanh 2") ||
+    nameLower.includes("hanh 2") ||
+    nameLower.includes("hanh_2") ||
+    nameLower.includes("lương") ||
+    nameLower.includes("luong") ||
+    nameLower.includes("part-time") ||
+    nameLower.includes("part time") ||
+    nameLower.includes("parttime") ||
+    nameLower.includes("làm thêm") ||
+    nameLower.includes("lam them") ||
+    nameLower.includes("15k") ||
+    nameLower.includes("20k") ||
+    nameLower.includes("180k") ||
+    nameLower.includes("200k") ||
+    nameLower.includes("so sánh") ||
+    nameLower.includes("so sanh") ||
+    nameLower.includes("cà phê") ||
+    nameLower.includes("ca phe") ||
+    (nameLower.includes("hanh") && dur >= 45)
+  ) {
+    return {
+      title: "SO SÁNH LƯƠNG LÀM THÊM: VIỆT NAM (15K/H) VS ĐÀI LOAN (180K/H)",
+      badge: "CÔ HẠNH NGUYÊN",
+      hookOpening: "TUYỂN NHÂN VIÊN PART-TIME LƯƠNG 15 - 20.000 MỘT GIỜ",
+      category: "expert",
+      recommendedBrollIds: ["broll-office", "broll-business", "broll-global", "broll-campus"],
+      segments: CHANH_LUONG_LAM_THEM_TRANSCRIPT,
+    };
+  }
+
+  // 2. Nhận diện chủ đề: Hồ sơ báo danh / Thủ tục du học Đài Loan
   if (
     nameLower.includes("hồ sơ") ||
     nameLower.includes("ho so") ||
@@ -35,119 +77,38 @@ export function analyzeRawVideo(
     nameLower.includes("thủ tục") ||
     nameLower.includes("thu tuc") ||
     nameLower.includes("giấy tờ") ||
-    nameLower.includes("giay to")
+    nameLower.includes("giay to") ||
+    nameLower.includes("c hanh 3") ||
+    nameLower.includes("c_hanh_3")
   ) {
-    const step = dur / 8;
     return {
       title: "HỒ SƠ BÁO DANH DU HỌC ĐÀI LOAN CẦN CÓ LÀ GÌ?",
       badge: "CÔ HẠNH NGUYÊN",
       hookOpening: "HỒ SƠ BÁO DANH DU HỌC ĐÀI LOAN CẦN CHUẨN BỊ NHỮNG GÌ?",
       category: "expert",
       recommendedBrollIds: ["broll-degree", "broll-campus", "broll-business", "broll-global"],
-      segments: [
-        {
-          id: "seg-hs-1",
-          sourceStart: 0.5,
-          sourceEnd: parseFloat((step * 1.0).toFixed(1)),
-          text: "Hôm nay, cô Hạnh sẽ giải đáp thắc mắc: Hồ sơ báo danh du học Đài Loan cần chuẩn bị những gì?",
-          highlight: "Hồ sơ báo danh",
-          zoomScale: 1.08,
-          brollMode: "none",
-          active: true,
-        },
-        {
-          id: "seg-hs-2",
-          sourceStart: parseFloat((step * 1.0 + 0.2).toFixed(1)),
-          sourceEnd: parseFloat((step * 2.1).toFixed(1)),
-          text: "Rất nhiều bạn bị lỡ kỳ nhập học chỉ vì thiếu sót một vài giấy tờ cơ bản!",
-          highlight: "thiếu sót giấy tờ",
-          zoomScale: 1.14,
-          infoCardText: "TRÁNH BỊ TỪ CHỐI HỒ SƠ",
-          brollMode: "none",
-          active: true,
-        },
-        {
-          id: "seg-hs-3",
-          sourceStart: parseFloat((step * 2.1 + 0.2).toFixed(1)),
-          sourceEnd: parseFloat((step * 3.3).toFixed(1)),
-          text: "Mục 1 quan trọng nhất: Bằng tốt nghiệp và Học bạ THPT hoặc Đại học đã công chứng và hợp pháp hóa",
-          highlight: "Bằng tốt nghiệp & Học bạ",
-          zoomScale: 1.08,
-          infoCardText: "BẰNG CẤP & HỌC BẠ",
-          brollId: "broll-degree",
-          brollMode: "cutaway",
-          active: true,
-        },
-        {
-          id: "seg-hs-4",
-          sourceStart: parseFloat((step * 3.3 + 0.2).toFixed(1)),
-          sourceEnd: parseFloat((step * 4.4).toFixed(1)),
-          text: "Mục 2: Chứng chỉ ngoại ngữ TOCFL ít nhất là Level 2 hoặc chứng chỉ tiếng Anh tương đương",
-          highlight: "Chứng chỉ TOCFL",
-          zoomScale: 1.14,
-          infoCardText: "CHỨNG CHỈ NGOẠI NGỮ",
-          brollId: "broll-campus",
-          brollMode: "pip",
-          active: true,
-        },
-        {
-          id: "seg-hs-5",
-          sourceStart: parseFloat((step * 4.4 + 0.2).toFixed(1)),
-          sourceEnd: parseFloat((step * 5.5).toFixed(1)),
-          text: "Mục 3: Giấy khám sức khỏe theo mẫu chuẩn và Sổ tiết kiệm chứng minh tài chính ngân hàng",
-          highlight: "Chứng minh tài chính",
-          zoomScale: 1.08,
-          infoCardText: "TÀI CHÍNH & SỨC KHỎE",
-          brollId: "broll-business",
-          brollMode: "cutaway",
-          active: true,
-        },
-        {
-          id: "seg-hs-6",
-          sourceStart: parseFloat((step * 5.5 + 0.2).toFixed(1)),
-          sourceEnd: parseFloat((step * 6.6).toFixed(1)),
-          text: "Mục 4: Bản kế hoạch học tập chi tiết trình bày rõ lý do chọn trường và định hướng phát triển",
-          highlight: "Kế hoạch học tập",
-          zoomScale: 1.08,
-          infoCardText: "KẾ HOẠCH HỌC TẬP",
-          brollId: "broll-office",
-          brollMode: "pip",
-          active: true,
-        },
-        {
-          id: "seg-hs-7",
-          sourceStart: parseFloat((step * 6.6 + 0.2).toFixed(1)),
-          sourceEnd: parseFloat((step * 7.7).toFixed(1)),
-          text: "Chuẩn bị đầy đủ 4 mục này, tỷ lệ đỗ visa và nhận học bổng của bạn lên tới 99%!",
-          highlight: "Tỷ lệ đỗ visa 99%",
-          zoomScale: 1.14,
-          infoCardText: "TỶ LỆ VISA 99%",
-          brollId: "broll-global",
-          brollMode: "cutaway",
-          active: true,
-        },
-        {
-          id: "seg-hs-8",
-          sourceStart: parseFloat((step * 7.7 + 0.2).toFixed(1)),
-          sourceEnd: dur,
-          text: "Lưu ngay video này lại và nhắn tin cho cô Hạnh để được kiểm tra rà soát hồ sơ miễn phí nhé!",
-          highlight: "Lưu video lại",
-          zoomScale: 1.08,
-          infoCardText: "RÀ SOÁT HỒ SƠ MIỄN PHÍ",
-          brollMode: "none",
-          active: true,
-        },
-      ],
+      segments: CHANH_HOSO_TRANSCRIPT,
     };
   }
 
-  // 2. Nhận diện chủ đề: Hệ vừa học vừa làm / Bằng nghề / Giải oan (Video Cô Hạnh số 1)
+  // 3. Nhận diện chủ đề: Hệ vừa học vừa làm / Bằng nghề / Giải oan (Video Cô Hạnh số 1)
   if (
     nameLower.includes("oan") ||
     nameLower.includes("bằng nghề") ||
     nameLower.includes("bang nghe") ||
     nameLower.includes("vừa học vừa làm") ||
-    nameLower.includes("vua hoc vua lam")
+    nameLower.includes("vua hoc vua lam") ||
+    nameLower.includes("bằng đại học") ||
+    nameLower.includes("bang dai hoc") ||
+    nameLower.includes("chính quy") ||
+    nameLower.includes("chinh quy") ||
+    nameLower.includes("c hanh 1") ||
+    nameLower.includes("c_hanh_1") ||
+    nameLower.includes("hanh 1") ||
+    nameLower.includes("c_hanh") ||
+    nameLower.includes("c hanh") ||
+    nameLower.includes("chi hanh") ||
+    nameLower.includes("co hanh")
   ) {
     return {
       title: "GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN",
@@ -155,106 +116,7 @@ export function analyzeRawVideo(
       hookOpening: "HỆ VỪA HỌC VỪA LÀM Ở ĐÀI LOAN CHỈ CẤP BẰNG NGHỀ THÔI Ạ?",
       category: "expert",
       recommendedBrollIds: ["broll-degree", "broll-campus", "broll-global"],
-      segments: [
-        {
-          id: "seg-1",
-          sourceStart: 0.72,
-          sourceEnd: Math.min(2.84, dur * 0.1),
-          text: "Hôm nay, cô Hạnh nhận được một câu hỏi của học sinh",
-          highlight: "một câu hỏi",
-          zoomScale: 1.08,
-          brollMode: "none",
-          active: true,
-        },
-        {
-          id: "seg-2",
-          sourceStart: Math.min(2.84, dur * 0.1),
-          sourceEnd: Math.min(6.78, dur * 0.22),
-          text: "“Hệ vừa học vừa làm ở Đài Loan chỉ cấp bằng nghề thôi ạ?”",
-          highlight: "bằng nghề",
-          zoomScale: 1.08,
-          brollMode: "none",
-          active: true,
-        },
-        {
-          id: "seg-3",
-          sourceStart: Math.min(7.1, dur * 0.23),
-          sourceEnd: Math.min(10.83, dur * 0.35),
-          text: "Hiểu như vậy thì quá oan cho hệ vừa học vừa làm rồi!",
-          highlight: "quá oan",
-          zoomScale: 1.14,
-          infoCardText: "KHÔNG CHỈ LÀ BẰNG NGHỀ",
-          brollId: "broll-degree",
-          brollMode: "cutaway",
-          active: true,
-        },
-        {
-          id: "seg-4",
-          sourceStart: Math.min(11.08, dur * 0.36),
-          sourceEnd: Math.min(16.06, dur * 0.52),
-          text: "Tốt nghiệp chương trình 4 năm, bạn nhận bằng chính quy",
-          highlight: "bằng chính quy",
-          zoomScale: 1.08,
-          brollId: "broll-campus",
-          brollMode: "pip",
-          active: true,
-        },
-        {
-          id: "seg-5",
-          sourceStart: Math.min(16.06, dur * 0.53),
-          sourceEnd: Math.min(18.24, dur * 0.6),
-          text: "BẰNG ĐẠI HỌC CHÍNH QUY do Bộ Giáo dục cấp",
-          highlight: "BẰNG ĐẠI HỌC CHÍNH QUY",
-          zoomScale: 1.08,
-          infoCardText: "BẰNG ĐẠI HỌC CHÍNH QUY",
-          brollId: "broll-degree",
-          brollMode: "cutaway",
-          active: true,
-        },
-        {
-          id: "seg-6",
-          sourceStart: Math.min(18.24, dur * 0.61),
-          sourceEnd: Math.min(21.32, dur * 0.7),
-          text: "Không chỉ có giá trị ở riêng trong nước",
-          highlight: "Không chỉ",
-          zoomScale: 1.0,
-          brollMode: "none",
-          active: true,
-        },
-        {
-          id: "seg-7",
-          sourceStart: Math.min(21.68, dur * 0.71),
-          sourceEnd: Math.min(24.18, dur * 0.8),
-          text: "Bằng còn có giá trị công nhận tại nhiều quốc gia",
-          highlight: "nhiều quốc gia",
-          zoomScale: 1.14,
-          infoCardText: "CÓ GIÁ TRỊ QUỐC TẾ",
-          brollId: "broll-global",
-          brollMode: "cutaway",
-          active: true,
-        },
-        {
-          id: "seg-8",
-          sourceStart: Math.min(24.18, dur * 0.81),
-          sourceEnd: Math.min(27.5, dur * 0.9),
-          text: "Dùng để học tiếp lên bậc THẠC SĨ hoặc TIẾN SĨ",
-          highlight: "THẠC SĨ",
-          zoomScale: 1.14,
-          brollMode: "none",
-          active: true,
-        },
-        {
-          id: "seg-9",
-          sourceStart: Math.min(27.5, dur * 0.91),
-          sourceEnd: dur,
-          text: "Hiểu đúng trước khi chọn — Bấm theo dõi kênh cô Hạnh ngay nhé!",
-          highlight: "theo dõi kênh",
-          zoomScale: 1.08,
-          infoCardText: "HIỂU ĐÚNG TRƯỚC KHI CHỌN",
-          brollMode: "none",
-          active: true,
-        },
-      ],
+      segments: CHANH_FULL_TRANSCRIPT,
     };
   }
 
@@ -470,13 +332,26 @@ export function analyzeRawVideo(
   const cleanName = fileName
     .replace(/\.[^/.]+$/, "")
     .replace(/[_-]+/g, " ")
-    .toUpperCase();
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Nếu file có tên chứa "hanh", tự động dùng kịch bản chuẩn Cô Hạnh
+  if (nameLower.includes("hanh")) {
+    return {
+      title: "SO SÁNH LƯƠNG LÀM THÊM: VIỆT NAM (15K/H) VS ĐÀI LOAN (180K/H)",
+      badge: "CÔ HẠNH NGUYÊN",
+      hookOpening: "TUYỂN NHÂN VIÊN PART-TIME LƯƠNG 15 - 20.000 MỘT GIỜ",
+      category: "expert",
+      recommendedBrollIds: ["broll-office", "broll-business", "broll-global", "broll-campus"],
+      segments: CHANH_LUONG_LAM_THEM_TRANSCRIPT,
+    };
+  }
 
   const step = dur / 5;
   return {
-    title: cleanName.length > 5 ? cleanName : "BÍ QUYẾT CHUYÊN SÂU & GIẢI PHÁP ĐỘT PHÁ",
-    badge: nameLower.includes("hanh") ? "CÔ HẠNH NGUYÊN" : "CHUYÊN GIA CHIA SẺ",
-    hookOpening: `BẬT MÍ NỘI DUNG QUAN TRỌNG VỀ ${cleanName.length > 5 ? cleanName : "CHỦ ĐỀ NÀY"}`,
+    title: cleanName.length > 5 ? cleanName.toUpperCase() : "BÍ QUYẾT CHUYÊN SÂU & GIẢI PHÁP ĐỘT PHÁ",
+    badge: "CHUYÊN GIA CHIA SẺ",
+    hookOpening: "BẬT MÍ BÍ QUYẾT QUAN TRỌNG GIÚP BẠN ĐỘT PHÁ KẾT QUẢ",
     category: "general",
     recommendedBrollIds: ["broll-office", "broll-lifestyle"],
     segments: [
@@ -484,8 +359,8 @@ export function analyzeRawVideo(
         id: "seg-gen-1",
         sourceStart: 0.5,
         sourceEnd: parseFloat((step * 1.2).toFixed(1)),
-        text: `Chia sẻ góc nhìn thẳng thắn và bài học thực tế về ${cleanName.toLowerCase() || "chủ đề này"}`,
-        highlight: "bài học thực tế",
+        text: "Hôm nay mình muốn chia sẻ một bài học thực chiến rất quan trọng mà nhiều người thường bỏ lỡ",
+        highlight: "bài học thực chiến",
         zoomScale: 1.08,
         brollMode: "none",
         active: true,
@@ -494,7 +369,7 @@ export function analyzeRawVideo(
         id: "seg-gen-2",
         sourceStart: parseFloat((step * 1.2 + 0.2).toFixed(1)),
         sourceEnd: parseFloat((step * 2.4).toFixed(1)),
-        text: "Những sai lầm phổ biến nhất khiến phần lớn mọi người mất rất nhiều thời gian",
+        text: "Những sai lầm phổ biến nhất khiến phần lớn mọi người mất rất nhiều thời gian và chi phí",
         highlight: "sai lầm phổ biến",
         zoomScale: 1.14,
         infoCardText: "TRÁNH SAI LẦM PHỔ BIẾN",
@@ -506,7 +381,7 @@ export function analyzeRawVideo(
         id: "seg-gen-3",
         sourceStart: parseFloat((step * 2.4 + 0.2).toFixed(1)),
         sourceEnd: parseFloat((step * 3.7).toFixed(1)),
-        text: "Giải pháp thực chiến áp dụng được ngay để đạt kết quả rõ rệt",
+        text: "Đây là giải pháp thực chiến bạn có thể áp dụng được ngay để đạt kết quả rõ rệt",
         highlight: "giải pháp thực chiến",
         zoomScale: 1.08,
         brollId: "broll-lifestyle",
@@ -517,7 +392,7 @@ export function analyzeRawVideo(
         id: "seg-gen-4",
         sourceStart: parseFloat((step * 3.7 + 0.2).toFixed(1)),
         sourceEnd: dur,
-        text: "Nếu thấy hữu ích, hãy thả tim và để lại bình luận góc nhìn của bạn nhé!",
+        text: "Nếu thấy video hữu ích, hãy thả tim và để lại bình luận góc nhìn của bạn nhé!",
         highlight: "thả tim và bình luận",
         zoomScale: 1.14,
         infoCardText: "BÌNH LUẬN GÓC NHÌN",
