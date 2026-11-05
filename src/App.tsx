@@ -36,6 +36,9 @@ import {
   TemplateCloneRemaker
 } from "./components/TemplateCloneRemaker";
 import {
+  MasterStudioWorkspace
+} from "./components/MasterStudioWorkspace";
+import {
   PRESETS
 } from "./data/presets";
 import {
@@ -70,6 +73,7 @@ import {
 
 export function App() {
   const [studioMode, setStudioMode] = useState<StudioMode>("superpower");
+  const [editorLayout, setEditorLayout] = useState<"master-studio" | "granular-timeline">("master-studio");
   const [currentVideo, setCurrentVideo] = useState<VideoSource | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<Preset>(PRESETS[0]);
   const [segments, setSegments] = useState<TranscriptSegment[]>(CHANH_FULL_TRANSCRIPT);
@@ -365,11 +369,10 @@ export function App() {
         <div className="flex items-center rounded-xl border border-zinc-800 bg-panel/90 p-1 shadow-inner">
           <button
             onClick={() => setStudioMode("superpower")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
-              studioMode === "superpower"
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${studioMode === "superpower"
                 ? "bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md shadow-pink-500/20"
                 : "text-zinc-400 hover:text-white"
-            }`}
+              }`}
           >
             <Sparkles className="size-3.5" />
             <span>⚡ Agent Tổng Superpower</span>
@@ -377,11 +380,10 @@ export function App() {
 
           <button
             onClick={() => setStudioMode("template-clone")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
-              studioMode === "template-clone"
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${studioMode === "template-clone"
                 ? "bg-gradient-to-r from-amber-500 to-orange-600 text-black shadow-md shadow-amber-500/20"
                 : "text-zinc-400 hover:text-white"
-            }`}
+              }`}
           >
             <Sparkles className="size-3.5" />
             <span>🎬 Clone Từ Link Mẫu + Ảnh</span>
@@ -406,7 +408,56 @@ export function App() {
             segments={segments}
             onReset={() => setHasRenderedOutput(false)}
           />
-        ) : currentVideo ? (
+        ) : (
+          <div className="space-y-6">
+            {/* Studio Workspace Layout Switcher */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditorLayout("master-studio")}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition-all ${
+                    editorLayout === "master-studio"
+                      ? "bg-gradient-to-r from-amber-400 to-amber-500 text-black shadow-lg shadow-amber-500/20"
+                      : "border border-zinc-800 bg-[#16161b] text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  <Sparkles className="size-3.5 fill-current" />
+                  <span>⚡ Studio 3 Cột Chuẩn (Mẫu Tham Khảo)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEditorLayout("granular-timeline")}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                    editorLayout === "granular-timeline"
+                      ? "bg-pink-500 text-white shadow-lg shadow-pink-500/20"
+                      : "border border-zinc-800 bg-[#16161b] text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  <Sliders className="size-3.5" />
+                  <span>🎛️ Timeline Đa Tầng Nâng Cao</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-zinc-400">
+                <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[11px] font-medium text-zinc-300">
+                  Tùy độ dài, ngắn video để tự tạo cảnh trám viral
+                </span>
+              </div>
+            </div>
+
+            {/* Workspace Content */}
+            {editorLayout === "master-studio" ? (
+              <MasterStudioWorkspace
+                currentVideo={currentVideo}
+                onSelectVideo={handleSelectVideo}
+                onStartRender={handleStartRender}
+                onAutoPilotSuperpower={handleAutoPilotSuperpower}
+              />
+            ) : (
+              currentVideo ? (
           /* View 2: Video Loaded - Professional Editor Workspace */
           <div className="space-y-6">
             <UploadDropzone
@@ -426,8 +477,8 @@ export function App() {
                   <button
                     onClick={() => setActiveTab("transcript")}
                     className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${activeTab === "transcript"
-                        ? "bg-pink-500 text-white shadow-md shadow-pink-500/20"
-                        : "text-zinc-400 hover:text-white hover:bg-panel"
+                      ? "bg-pink-500 text-white shadow-md shadow-pink-500/20"
+                      : "text-zinc-400 hover:text-white hover:bg-panel"
                       }`}
                   >
                     <FileText className="size-3.5" />
@@ -437,8 +488,8 @@ export function App() {
                   <button
                     onClick={() => setActiveTab("presets")}
                     className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${activeTab === "presets"
-                        ? "bg-pink-500 text-white shadow-md shadow-pink-500/20"
-                        : "text-zinc-400 hover:text-white hover:bg-panel"
+                      ? "bg-pink-500 text-white shadow-md shadow-pink-500/20"
+                      : "text-zinc-400 hover:text-white hover:bg-panel"
                       }`}
                   >
                     <Sparkles className="size-3.5" />
@@ -448,8 +499,8 @@ export function App() {
                   <button
                     onClick={() => setActiveTab("settings")}
                     className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${activeTab === "settings"
-                        ? "bg-pink-500 text-white shadow-md shadow-pink-500/20"
-                        : "text-zinc-400 hover:text-white hover:bg-panel"
+                      ? "bg-pink-500 text-white shadow-md shadow-pink-500/20"
+                      : "text-zinc-400 hover:text-white hover:bg-panel"
                       }`}
                   >
                     <Sliders className="size-3.5" />
@@ -649,6 +700,9 @@ export function App() {
                 ))}
               </div>
             </div>
+          </div>
+              )
+            )}
           </div>
         )}
 
