@@ -16,13 +16,6 @@ export const DEFAULT_BROLL_ITEMS: BrollItem[] = [
     duration: 18,
   },
   {
-    id: "broll-office",
-    title: "💼 Doanh Nghiệp & Môi Trường Làm Việc",
-    category: "business",
-    url: "/samples/sample2.mp4",
-    duration: 20,
-  },
-  {
     id: "broll-global",
     title: "🌏 Hội Nhập & Giá Trị Bằng Quốc Tế",
     category: "education",
@@ -30,9 +23,44 @@ export const DEFAULT_BROLL_ITEMS: BrollItem[] = [
     duration: 22,
   },
   {
+    id: "broll-business",
+    title: "📈 Biểu Đồ Tăng Trưởng & Tài Chính",
+    category: "business",
+    url: "/samples/sample1.mp4",
+    duration: 20,
+  },
+  {
+    id: "broll-office",
+    title: "💼 Doanh Nghiệp & Môi Trường Làm Việc",
+    category: "business",
+    url: "/samples/sample2.mp4",
+    duration: 20,
+  },
+  {
+    id: "broll-tech",
+    title: "💻 Lập Trình, Màn Hình AI & Công Nghệ",
+    category: "technology",
+    url: "/samples/sample2.mp4",
+    duration: 25,
+  },
+  {
+    id: "broll-product",
+    title: "📦 Unboxing & Trải Nghiệm Sản Phẩm",
+    category: "lifestyle",
+    url: "/samples/sample3.mp4",
+    duration: 18,
+  },
+  {
+    id: "broll-lifestyle",
+    title: "☕ Đời Sống Năng Động & Làm Việc",
+    category: "lifestyle",
+    url: "/samples/sample3.mp4",
+    duration: 16,
+  },
+  {
     id: "broll-consulting",
     title: "💡 Tư Vấn Chuyên Sâu 1-1",
-    category: "lifestyle",
+    category: "business",
     url: "/samples/sample3.mp4",
     duration: 16,
   },
@@ -137,3 +165,4 @@ export const CHANH_FULL_TRANSCRIPT: TranscriptSegment[] = [
     active: true,
   },
 ];
+

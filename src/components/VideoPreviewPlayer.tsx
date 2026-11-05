@@ -44,6 +44,7 @@ interface VideoPreviewPlayerProps {
   currentTime: number;
   onTimeUpdate: (time: number) => void;
   headlineTitle?: string;
+  speakerBadge?: string;
   showHeadlinePlate?: boolean;
 }
 
@@ -65,9 +66,12 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
   transition,
   currentTime,
   onTimeUpdate,
-  headlineTitle = "CÔ HẠNH CHIA SẺ — GIẢI OAN DU HỌC",
+  headlineTitle,
+  speakerBadge,
   showHeadlinePlate = true,
 }) => {
+  const currentTitle = headlineTitle || video.videoTitle || preset.headlineText || "BÍ QUYẾT CHUYÊN SÂU & GIẢI PHÁP ĐỘT PHÁ";
+  const currentBadge = speakerBadge || video.speakerBadge || preset.expertBadge || "CHUYÊN GIA CHIA SẺ";
   const videoRef = useRef<HTMLVideoElement>(null);
   const brollVideoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -362,18 +366,18 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
             <div className="pointer-events-none absolute inset-0 z-30 bg-white vfx-flash-overlay" />
           )}
 
-          {/* Top Headline Plate (Chuyên Gia Cô Hạnh signature) */}
+          {/* Top Headline Plate (Chuyên Gia signature) */}
           {showHeadlinePlate && (
             <div className="pointer-events-none absolute left-3 top-7 z-25 flex flex-col gap-1 max-w-[240px]">
               <div className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#42152A] to-zinc-950 border border-[#FF3B81]/60 px-2.5 py-0.5 shadow-lg backdrop-blur-md">
                 <span className="size-2 rounded-full bg-[#FF3B81] animate-ping"></span>
                 <span className="text-[9px] font-black uppercase text-[#FFF7F8] tracking-wider">
-                  {preset.expertBadge || "CÔ HẠNH CHIA SẺ"}
+                  {currentBadge}
                 </span>
               </div>
               <div className="rounded-lg bg-black/80 border border-white/10 px-2.5 py-1 backdrop-blur-sm">
                 <span className="text-[10px] font-extrabold text-[#FFF7F8] uppercase tracking-wide leading-tight line-clamp-1">
-                  {headlineTitle}
+                  {currentTitle}
                 </span>
               </div>
             </div>
@@ -480,9 +484,11 @@ export const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
 
               {/* Bottom Caption Safe Zone */}
               <div className="w-[78%] pb-4">
-                <div className="text-xs font-bold drop-shadow">@cohanh.duhoc</div>
+                <div className="text-xs font-bold drop-shadow">
+                  @{currentBadge.toLowerCase().replace(/[^a-z0-9]/g, "") || "chuyengia"}.master
+                </div>
                 <div className="text-[10px] text-zinc-200 line-clamp-2 mt-0.5 drop-shadow">
-                  Giải oan hệ vừa học vừa làm tại Đài Loan — Hiểu đúng trước khi chọn #duhoc #cohanh
+                  {currentTitle} — {currentSegment?.text || "Bấm theo dõi kênh để cập nhật video mới nhất nhé!"}
                 </div>
               </div>
             </div>

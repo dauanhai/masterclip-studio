@@ -32,26 +32,30 @@ export const OutputResults: React.FC<OutputResultsProps> = ({
 }) => {
   const [downloadNotice, setDownloadNotice] = useState<string | null>(null);
 
+  const videoTitle = sourceVideo.videoTitle || sourceVideo.name.replace(/\.[^/.]+$/, "");
+  const firstHook = segments[0]?.text || sourceVideo.hookOpening || preset.sampleHook;
+  const brollCount = segments.filter((s) => s.brollMode !== "none").length;
+
   // Master Full Video Clip (The complete professional edit)
   const masterClip: ShortClip = {
     id: "master-cut-final",
-    title: "🌟 BẢN DỰNG MASTER CHUYÊN NGHIỆP HOÀN CHỈNH (FULL EDIT)",
+    title: `🌟 BẢN DỰNG MASTER HOÀN CHỈNH: ${videoTitle}`,
     duration: Math.round(sourceVideo.duration) || 31,
     startTime: 0,
     endTime: sourceVideo.duration || 30.4,
     viralScore: 99,
-    hookText: `"${preset.sampleHook}"`,
-    summary: `Biên tập hoàn chỉnh toàn bộ ${segments.length || 9} câu thoại gốc, tự động chèn cảnh trám B-Roll (Bằng ĐH, Giảng đường), thẻ Info Card luận điểm, camera punch-in 1.08x-1.14x và nhạc nền 120 BPM chuẩn mẫu Chị Hạnh.`,
+    hookText: `"${firstHook}"`,
+    summary: `Biên tập hoàn chỉnh toàn bộ ${segments.length || 9} câu thoại gốc của video, điều phối ${brollCount} cảnh trám B-Roll tư liệu minh họa, camera punch-in linh hoạt và nhạc nền chuẩn chất chuyên gia.`,
     videoUrl: sourceVideo.url,
     aspectRatio: "9:16",
     tags: ["Master Cut", "Chuyên Gia", "Full Edit", "Tiktok / Reels Top"],
     appliedEffects: [
-      "Nắm trọn 9 câu thoại gốc",
-      "Chèn cảnh trám B-Roll Cutaways",
+      `Nắm trọn ${segments.length || 9} câu thoại gốc`,
+      `Điều phối ${brollCount} cảnh trám B-Roll`,
       "Camera Punch-in 1.08x-1.14x",
       "Thẻ Info Card Luận Điểm",
-      "Subtitles Trắng Kem - Hồng Đậm #FF3B81",
-      "Nhạc nền 120 BPM Carve Ducking",
+      "Subtitles chữ to giật nhịp & đổi màu từ khóa",
+      "Nhạc nền Carve Voice Ducking",
     ],
     isMasterCut: true,
   };
@@ -60,31 +64,31 @@ export const OutputResults: React.FC<OutputResultsProps> = ({
   const subClips: ShortClip[] = [
     {
       id: "clip-1",
-      title: "Short Cắt Nhanh #1: Hook Mở Đầu & Phản Biện 'Quá Oan'",
-      duration: 11,
-      startTime: 0.72,
-      endTime: 10.83,
+      title: "Short Cắt Nhanh #1: Hook Mở Đầu & Giữ Chân Người Xem",
+      duration: Math.round(segments.slice(0, Math.min(3, segments.length)).reduce((acc, s) => acc + (s.sourceEnd - s.sourceStart), 0)) || 10,
+      startTime: segments[0]?.sourceStart || 0,
+      endTime: segments[Math.min(2, segments.length - 1)]?.sourceEnd || 10,
       viralScore: 98,
-      hookText: `"“Hệ vừa học vừa làm ở Đài Loan chỉ cấp bằng nghề thôi ạ?” — Hiểu như vậy thì quá oan rồi!"`,
-      summary: "3 giây đầu gây tò mò cực độ và phản biện đánh thẳng vào hiểu lầm phổ biến nhất của người xem.",
+      hookText: `"${firstHook}"`,
+      summary: "3 giây đầu gây tò mò cực độ và đánh trúng tâm lý tò mò của người xem.",
       videoUrl: sourceVideo.url,
       aspectRatio: "9:16",
-      tags: ["Strong Hook", "Phản Biện", "Tiktok Viral"],
-      appliedEffects: ["Kinetic Subtitles", "Punch-in 1.14x", "Thẻ Info Card: KHÔNG CHỈ LÀ BẰNG NGHỀ"],
+      tags: ["Strong Hook", "Giữ Chân", "Tiktok Viral"],
+      appliedEffects: ["Kinetic Subtitles", "Punch-in 1.14x", "Thẻ Info Card"],
     },
     {
       id: "clip-2",
-      title: "Short Cắt Nhanh #2: Chứng Minh Bằng Đại Học Chính Quy & Quốc Tế",
-      duration: 16,
-      startTime: 11.08,
-      endTime: 27.5,
+      title: "Short Cắt Nhanh #2: Luận Điểm & Giải Pháp Cốt Lõi",
+      duration: Math.round(segments.slice(Math.min(2, segments.length - 1)).reduce((acc, s) => acc + (s.sourceEnd - s.sourceStart), 0)) || 15,
+      startTime: segments[Math.min(2, segments.length - 1)]?.sourceStart || 10,
+      endTime: sourceVideo.duration || 30,
       viralScore: 95,
-      hookText: `"Tốt nghiệp 4 năm nhận BẰNG ĐẠI HỌC CHÍNH QUY dùng để học tiếp THẠC SĨ hoặc TIẾN SĨ!"`,
-      summary: "Đưa ra bằng chứng thuyết phục, chèn cảnh trám lễ tốt nghiệp và giảng đường đại học quốc tế.",
+      hookText: `"${segments[Math.min(3, segments.length - 1)]?.text || firstHook}"`,
+      summary: "Đưa ra bằng chứng thuyết phục, kết hợp cảnh trám và kêu gọi hành động CTA.",
       videoUrl: sourceVideo.url,
       aspectRatio: "9:16",
-      tags: ["Bằng Chứng", "B-Roll Cutaway", "Reels Top"],
-      appliedEffects: ["Cảnh trám B-Roll Bằng ĐH", "Info Card: BẰNG ĐẠI HỌC CHÍNH QUY", "Audio Ducking"],
+      tags: ["Bằng Chứng", "B-Roll Cutaway", "CTA Chốt Đơn"],
+      appliedEffects: ["Cảnh trám B-Roll", "Audio Ducking", "Highlight từ khóa"],
     },
   ];
 

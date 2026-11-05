@@ -45,6 +45,7 @@ import {
   TranscriptSegment,
   BrollItem 
 } from "./types";
+import { parseCustomScript, analyzeRawVideo } from "./lib/videoAnalysis";
 import { 
   Sparkles, 
   Crown, 
@@ -60,12 +61,16 @@ import {
 
 export function App() {
   const [currentVideo, setCurrentVideo] = useState<VideoSource | null>(null);
-  const [selectedPreset, setSelectedPreset] = useState<Preset>(PRESETS[0]); // Chuyên gia Cô Hạnh as default
+  const [selectedPreset, setSelectedPreset] = useState<Preset>(PRESETS[0]);
   const [segments, setSegments] = useState<TranscriptSegment[]>(CHANH_FULL_TRANSCRIPT);
   const [brollList, setBrollList] = useState<BrollItem[]>(DEFAULT_BROLL_ITEMS);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<"transcript" | "presets" | "settings">("transcript");
   
+  // Dynamic video metadata
+  const [videoTitle, setVideoTitle] = useState<string>("GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN");
+  const [speakerBadge, setSpeakerBadge] = useState<string>("CÔ HẠNH CHIA SẺ");
+
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const [safeZone, setSafeZone] = useState<boolean>(true);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -107,6 +112,16 @@ export function App() {
     setTimeout(() => setToastNotice(null), 3000);
   };
 
+  const handleSelectVideo = (v: VideoSource) => {
+    setCurrentVideo(v);
+    if (v.videoTitle) setVideoTitle(v.videoTitle);
+    if (v.speakerBadge) setSpeakerBadge(v.speakerBadge);
+    if (v.transcript && v.transcript.length > 0) {
+      setSegments(v.transcript);
+    }
+    setHasRenderedOutput(false);
+  };
+
   const handleSelectPreset = (preset: Preset) => {
     setSelectedPreset(preset);
     setSettings((prev) => ({
@@ -118,31 +133,63 @@ export function App() {
       transition: preset.recommendedTransition,
       hologramUI: preset.hologramDefault,
       highlightKeywordColor: preset.highlightKeywordColor,
-      headlineText: preset.headlineText || prev.headlineText,
     }));
 
-    if (preset.defaultSegments) {
-      setSegments(preset.defaultSegments);
-    }
-
-    showToast(`Đã áp dụng mẫu "${preset.name}"`);
+    showToast(`Đã áp dụng mẫu phong cách: "${preset.name}"`);
   };
 
   const handleUpdateSegment = (updated: TranscriptSegment) => {
     setSegments((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
   };
 
+  const handleApplyCustomScript = (scriptText: string) => {
+    const dur = currentVideo?.duration || 30;
+    const newSegs = parseCustomScript(scriptText, dur);
+    
+    // Auto-enrich segments with matching B-Rolls based on text keywords
+    const enriched = newSegs.map((s, idx) => {
+      const text = s.text.toLowerCase();
+      if (text.includes("ai") || text.includes("phần mềm") || text.includes("công nghệ") || text.includes("máy tính") || text.includes("tool")) {
+        return { ...s, brollId: "broll-tech", brollMode: "cutaway" as const, infoCardText: "CÔNG NGHỆ ĐỘT PHÁ" };
+      }
+      if (text.includes("tiền") || text.includes("tài chính") || text.includes("doanh thu") || text.includes("đầu tư") || text.includes("giàu")) {
+        return { ...s, brollId: "broll-business", brollMode: "cutaway" as const, infoCardText: "TĂNG TRƯỞNG TÀI CHÍNH" };
+      }
+      if (text.includes("bằng") || text.includes("đại học") || text.includes("du học") || text.includes("nghề") || text.includes("học")) {
+        return { ...s, brollId: "broll-degree", brollMode: "cutaway" as const, infoCardText: "BẰNG CHÍNH QUY" };
+      }
+      if (text.includes("sản phẩm") || text.includes("review") || text.includes("mua") || text.includes("món") || text.includes("giá")) {
+        return { ...s, brollId: "broll-product", brollMode: "cutaway" as const, infoCardText: "CHẤT LƯỢNG CAO CẤP" };
+      }
+      if (idx % 2 === 1) {
+        return { ...s, brollId: "broll-office", brollMode: "pip" as const };
+      }
+      return s;
+    });
+
+    setSegments(enriched);
+    showToast(`Đã áp dụng ${newSegs.length} câu thoại từ kịch bản của bạn!`);
+  };
+
   const handleAutoAssignBroll = () => {
-    // Smart B-roll allocation based on keywords
+    // Smart B-roll allocation based on keywords across all niches
     setSegments((prev) =>
-      prev.map((s) => {
+      prev.map((s, idx) => {
         const text = s.text.toLowerCase();
-        if (text.includes("bằng nghề") || text.includes("oan") || text.includes("đại học chính quy")) {
-          return { ...s, brollId: "broll-degree", brollMode: "cutaway" as const };
-        } else if (text.includes("4 năm") || text.includes("chương trình")) {
+        if (text.includes("ai") || text.includes("phần mềm") || text.includes("công nghệ") || text.includes("máy tính")) {
+          return { ...s, brollId: "broll-tech", brollMode: "cutaway" as const, infoCardText: "KÍCH HOẠT CÔNG NGHỆ" };
+        } else if (text.includes("tiền") || text.includes("tài chính") || text.includes("doanh thu") || text.includes("đầu tư") || text.includes("giàu")) {
+          return { ...s, brollId: "broll-business", brollMode: "cutaway" as const, infoCardText: "DÒNG TIỀN TỰ ĐỘNG" };
+        } else if (text.includes("sản phẩm") || text.includes("review") || text.includes("mua") || text.includes("món") || text.includes("giá")) {
+          return { ...s, brollId: "broll-product", brollMode: "cutaway" as const, infoCardText: "SẢN PHẨM CHÍNH HÃNG" };
+        } else if (text.includes("bằng nghề") || text.includes("oan") || text.includes("đại học chính quy") || text.includes("bằng")) {
+          return { ...s, brollId: "broll-degree", brollMode: "cutaway" as const, infoCardText: "BẰNG ĐẠI HỌC CHÍNH QUY" };
+        } else if (text.includes("4 năm") || text.includes("chương trình") || text.includes("trường")) {
           return { ...s, brollId: "broll-campus", brollMode: "pip" as const };
         } else if (text.includes("quốc gia") || text.includes("giá trị")) {
-          return { ...s, brollId: "broll-global", brollMode: "cutaway" as const };
+          return { ...s, brollId: "broll-global", brollMode: "cutaway" as const, infoCardText: "GIÁ TRỊ QUỐC TẾ" };
+        } else if (idx % 2 === 1) {
+          return { ...s, brollId: "broll-lifestyle", brollMode: "pip" as const };
         }
         return s;
       })
@@ -174,10 +221,11 @@ export function App() {
   const handleCompleteRender = () => {
     setIsProcessing(false);
     setHasRenderedOutput(true);
-    showToast("Hoàn tất! Bản dựng Master Chuyên Gia đã sẵn sàng xuất bản.");
+    showToast("Hoàn tất! Bản dựng Master Chuyên Nghiệp đã sẵn sàng xuất bản.");
   };
 
   const handleOpenHistoryProject = (proj: ProjectHistoryItem) => {
+    const analysis = analyzeRawVideo(proj.title, 31);
     setCurrentVideo({
       id: proj.id,
       name: proj.title,
@@ -185,10 +233,14 @@ export function App() {
       size: 10718522,
       duration: 31,
       isSample: true,
-      isChanhSample: true,
-      transcript: CHANH_FULL_TRANSCRIPT,
+      videoTitle: analysis.title,
+      speakerBadge: analysis.badge,
+      hookOpening: analysis.hookOpening,
+      transcript: analysis.segments,
     });
-    setSegments(CHANH_FULL_TRANSCRIPT);
+    setVideoTitle(analysis.title);
+    setSpeakerBadge(analysis.badge);
+    setSegments(analysis.segments);
     setHasRenderedOutput(false);
     showToast(`Đã mở dự án: ${proj.title}`);
   };
@@ -216,7 +268,7 @@ export function App() {
         {hasRenderedOutput && currentVideo ? (
           /* View 1: Master Professional Output */
           <OutputResults
-            sourceVideo={currentVideo}
+            sourceVideo={{ ...currentVideo, videoTitle, speakerBadge }}
             preset={selectedPreset}
             segments={segments}
             onReset={() => setHasRenderedOutput(false)}
@@ -226,13 +278,7 @@ export function App() {
           <div className="space-y-6">
             <UploadDropzone
               currentVideo={currentVideo}
-              onSelectVideo={(v) => {
-                setCurrentVideo(v);
-                if (v.transcript) {
-                  setSegments(v.transcript);
-                }
-                setHasRenderedOutput(false);
-              }}
+              onSelectVideo={handleSelectVideo}
               onClearVideo={() => setCurrentVideo(null)}
             />
 
@@ -251,7 +297,7 @@ export function App() {
                     }`}
                   >
                     <FileText className="size-3.5" />
-                    <span>1. Toàn Bộ Lời Thoại & Cảnh Trám B-Roll ({segments.length})</span>
+                    <span>1. Lời Thoại Gốc & Cảnh Trám ({segments.length} câu)</span>
                   </button>
 
                   <button
@@ -263,7 +309,7 @@ export function App() {
                     }`}
                   >
                     <Sparkles className="size-3.5" />
-                    <span>2. Mẫu Chuyên Gia & Preset</span>
+                    <span>2. Phong Cách & Preset</span>
                   </button>
 
                   <button
@@ -285,6 +331,11 @@ export function App() {
                     segments={segments}
                     brollList={brollList}
                     currentPlayTime={currentTime}
+                    videoTitle={videoTitle}
+                    speakerBadge={speakerBadge}
+                    onChangeTitle={(t) => setVideoTitle(t)}
+                    onChangeBadge={(b) => setSpeakerBadge(b)}
+                    onApplyCustomScript={handleApplyCustomScript}
                     onUpdateSegment={handleUpdateSegment}
                     onSeek={(time) => setCurrentTime(time)}
                     onAutoAssignBroll={handleAutoAssignBroll}
@@ -316,7 +367,7 @@ export function App() {
                     className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 py-3.5 text-sm font-extrabold text-white shadow-xl shadow-pink-500/25 hover:brightness-110 active:scale-[0.99] transition-all"
                   >
                     <Sparkles className="size-4" />
-                    <span>⚡ XUẤT BẢN VIDEO CHUYÊN GIA HOÀN CHỈNH (FULL MASTER EDIT)</span>
+                    <span>⚡ XUẤT BẢN VIDEO MASTER CHUYÊN NGHIỆP THEO LỜI THOẠI NÀY</span>
                   </button>
                 </div>
               </div>
@@ -328,8 +379,8 @@ export function App() {
                     <span className="text-xs font-extrabold text-white flex items-center gap-1.5">
                       <Film className="size-3.5 text-pink-400" /> Xem Trước Bản Dựng 9:16
                     </span>
-                    <span className="text-[10px] text-pink-400 font-bold bg-pink-500/10 px-2 py-0.5 rounded-full border border-pink-500/20">
-                      Mẫu Cô Hạnh Active
+                    <span className="text-[10px] text-pink-400 font-bold bg-pink-500/10 px-2.5 py-0.5 rounded-full border border-pink-500/20 truncate max-w-[180px]">
+                      {speakerBadge}
                     </span>
                   </div>
 
@@ -351,7 +402,8 @@ export function App() {
                     transition={settings.transition}
                     currentTime={currentTime}
                     onTimeUpdate={(t) => setCurrentTime(t)}
-                    headlineTitle={settings.headlineText}
+                    headlineTitle={videoTitle}
+                    speakerBadge={speakerBadge}
                     showHeadlinePlate={settings.showHeadlinePlate}
                   />
                 </div>
@@ -363,13 +415,7 @@ export function App() {
           <div className="space-y-12">
             <UploadDropzone
               currentVideo={null}
-              onSelectVideo={(v) => {
-                setCurrentVideo(v);
-                if (v.transcript) {
-                  setSegments(v.transcript);
-                }
-                showToast(`Đã nạp video "${v.name}". Đã trích xuất toàn bộ lời thoại gốc!`);
-              }}
+              onSelectVideo={handleSelectVideo}
               onClearVideo={() => setCurrentVideo(null)}
             />
 
@@ -377,10 +423,10 @@ export function App() {
             <div className="mx-auto max-w-4xl">
               <div className="text-center mb-6">
                 <h3 className="text-lg font-extrabold text-white">
-                  Mẫu Video Chuyên Gia & Các Phong Cách Thịnh Hành
+                  Mẫu Video Chuyên Gia & Các Phong Cách Biên Tập Thịnh Hành
                 </h3>
                 <p className="text-xs text-zinc-400 mt-1">
-                  Đầy đủ trích xuất lời thoại gốc, phân bổ cảnh trám B-Roll và camera punch-in
+                  Mỗi video đầu vào được tự động bóc tách lời thoại gốc riêng biệt, chèn cảnh trám B-Roll phù hợp và camera punch-in
                 </p>
               </div>
 
@@ -389,16 +435,63 @@ export function App() {
                   <div
                     key={p.id}
                     onClick={() => {
-                      setCurrentVideo({
-                        id: "sample-chanh",
-                        name: "Mẫu Chuyên Gia Cô Hạnh — Giải Oan Du Học",
-                        url: "/samples/chanh-source.mp4",
-                        size: 10718522,
-                        duration: 31,
-                        isSample: true,
-                        isChanhSample: true,
-                        transcript: CHANH_FULL_TRANSCRIPT,
-                      });
+                      if (p.id === "chanh-expert") {
+                        handleSelectVideo({
+                          id: "sample-chanh",
+                          name: "Mẫu 1: Cô Hạnh — Giải Oan Du Học Đài Loan",
+                          url: "/samples/chanh-source.mp4",
+                          size: 10718522,
+                          duration: 31,
+                          isSample: true,
+                          isChanhSample: true,
+                          videoTitle: "GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN",
+                          speakerBadge: "CÔ HẠNH CHIA SẺ",
+                          hookOpening: "HỆ VỪA HỌC VỪA LÀM Ở ĐÀI LOAN CHỈ CẤP BẰNG NGHỀ THÔI Ạ?",
+                          transcript: CHANH_FULL_TRANSCRIPT,
+                        });
+                      } else if (p.id === "hero-neon" || p.id === "podcast-authority") {
+                        const analysis = analyzeRawVideo("tai-chinh.mp4", 32);
+                        handleSelectVideo({
+                          id: "sample-finance",
+                          name: "Mẫu 2: Tài Chính — 3 Tư Duy Bật Tăng Thu Nhập",
+                          url: "/samples/sample1.mp4",
+                          size: 2512258,
+                          duration: 32,
+                          isSample: true,
+                          videoTitle: analysis.title,
+                          speakerBadge: analysis.badge,
+                          hookOpening: analysis.hookOpening,
+                          transcript: analysis.segments,
+                        });
+                      } else if (p.id === "ecommerce-review") {
+                        const analysis = analyzeRawVideo("review-san-pham.mp4", 28);
+                        handleSelectVideo({
+                          id: "sample-review",
+                          name: "Mẫu 4: Review Sản Phẩm — Đáng Đồng Tiền Bát Gạo Hay Không?",
+                          url: "/samples/sample3.mp4",
+                          size: 2770846,
+                          duration: 28,
+                          isSample: true,
+                          videoTitle: analysis.title,
+                          speakerBadge: analysis.badge,
+                          hookOpening: analysis.hookOpening,
+                          transcript: analysis.segments,
+                        });
+                      } else {
+                        const analysis = analyzeRawVideo("ai-cong-nghe.mp4", 35);
+                        handleSelectVideo({
+                          id: "sample-tech",
+                          name: "Mẫu 3: Công Nghệ AI — Bí Quyết Sử Dụng AI Đỉnh Cao",
+                          url: "/samples/sample2.mp4",
+                          size: 2580221,
+                          duration: 35,
+                          isSample: true,
+                          videoTitle: analysis.title,
+                          speakerBadge: analysis.badge,
+                          hookOpening: analysis.hookOpening,
+                          transcript: analysis.segments,
+                        });
+                      }
                       handleSelectPreset(p);
                     }}
                     className="group rounded-2xl border border-zinc-800 bg-card p-5 cursor-pointer transition-all hover:border-pink-500/60 hover:bg-panel hover:shadow-xl hover:shadow-pink-500/10"
@@ -437,7 +530,7 @@ export function App() {
         <div className="mx-auto max-w-7xl px-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="font-extrabold text-sm text-zinc-300">
-              Master<span className="gold-text">Clip</span> AI Studio — Chuyên Gia Edition
+              Master<span className="gold-text">Clip</span> AI Studio — Nền Tảng Biên Tập Video Chuyên Gia Đa Chủ Đề
             </span>
             <span>• Bản quyền © 2026</span>
           </div>
@@ -445,7 +538,7 @@ export function App() {
           <div className="flex items-center gap-4 text-zinc-400">
             <span className="inline-flex items-center gap-1.5 text-pink-400 font-semibold">
               <span className="size-2 rounded-full bg-pink-500 animate-pulse"></span>
-              Toàn bộ lời thoại gốc + Cảnh trám B-Roll + Mẫu Cô Hạnh
+              Phân tích lời thoại độc bản + Cảnh trám B-Roll thông minh
             </span>
             <span>•</span>
             <span className="hover:text-white cursor-pointer" onClick={() => setShowPricingModal(true)}>
@@ -459,7 +552,7 @@ export function App() {
       {currentVideo && (
         <ProcessingModal
           isOpen={isProcessing}
-          video={currentVideo}
+          video={{ ...currentVideo, videoTitle, speakerBadge }}
           preset={selectedPreset}
           onComplete={handleCompleteRender}
           onCancel={() => setIsProcessing(false)}

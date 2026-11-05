@@ -13,6 +13,7 @@ import {
 import { VideoSource } from "../types";
 import { formatFileSize, formatTime } from "../lib/utils";
 import { CHANH_FULL_TRANSCRIPT } from "../data/brollAndTranscript";
+import { analyzeRawVideo } from "../lib/videoAnalysis";
 
 interface UploadDropzoneProps {
   currentVideo: VideoSource | null;
@@ -23,37 +24,52 @@ interface UploadDropzoneProps {
 const SAMPLE_VIDEOS: VideoSource[] = [
   {
     id: "sample-chanh",
-    name: "Mẫu Chuyên Gia Cô Hạnh — Giải Oan Du Học (Chuẩn Prototype)",
+    name: "Mẫu 1: Cô Hạnh — Giải Oan Du Học Đài Loan",
     url: "/samples/chanh-source.mp4",
     size: 10718522,
     duration: 31,
     isSample: true,
     isChanhSample: true,
+    videoTitle: "GIẢI OAN HỆ VỪA HỌC VỪA LÀM TẠI ĐÀI LOAN",
+    speakerBadge: "CÔ HẠNH CHIA SẺ",
+    hookOpening: "HỆ VỪA HỌC VỪA LÀM Ở ĐÀI LOAN CHỈ CẤP BẰNG NGHỀ THÔI Ạ?",
     transcript: CHANH_FULL_TRANSCRIPT,
   },
   {
-    id: "sample-1",
-    name: "Video mẫu 2 — Bài Giảng & Tư Duy Tài Chính",
+    id: "sample-finance",
+    name: "Mẫu 2: Tài Chính — 3 Tư Duy Bật Tăng Thu Nhập",
     url: "/samples/sample1.mp4",
     size: 2512258,
     duration: 32,
     isSample: true,
+    videoTitle: "3 TƯ DUY TÀI CHÍNH BẬT TĂNG THU NHẬP",
+    speakerBadge: "CHUYÊN GIA TÀI CHÍNH",
+    hookOpening: "TẠI SAO NGƯỜI GIÀU CÀNG LÀM CÀNG NHIỀU TIỀN VÀ TỰ DO?",
+    transcript: analyzeRawVideo("tai-chinh.mp4", 32).segments,
   },
   {
-    id: "sample-2",
-    name: "Video mẫu 3 — B-Roll & Du Lịch Điện Ảnh",
+    id: "sample-tech",
+    name: "Mẫu 3: Công Nghệ AI — Bí Quyết Kích Hoạt & Tiết Kiệm Thời Gian",
     url: "/samples/sample2.mp4",
     size: 2580221,
-    duration: 45,
+    duration: 35,
     isSample: true,
+    videoTitle: "BÍ QUYẾT CÀI ĐẶT & SỬ DỤNG AI ĐỈNH CAO",
+    speakerBadge: "CHUYÊN GIA CÔNG NGHỆ",
+    hookOpening: "3 BÍ QUYẾT SỬ DỤNG AI GIÚP BẠN TIẾT KIỆM 10 TIẾNG MỖI NGÀY",
+    transcript: analyzeRawVideo("ai-chatgpt.mp4", 35).segments,
   },
   {
-    id: "sample-3",
-    name: "Video mẫu 4 — Review Sản Phẩm Đời Sống",
+    id: "sample-review",
+    name: "Mẫu 4: Review Sản Phẩm — Đáng Đồng Tiền Bát Gạo Hay Không?",
     url: "/samples/sample3.mp4",
     size: 2770846,
-    duration: 38,
+    duration: 28,
     isSample: true,
+    videoTitle: "REVIEW THỰC TẾ: ĐÁNG ĐỒNG TIỀN BÁT GẠO HAY KHÔNG?",
+    speakerBadge: "REVIEW CHÂN THỰC",
+    hookOpening: "MÓN ĐỒ DƯỚI 200 CÀNG DÙNG CÀNG THẤY QUÁ LỜI!",
+    transcript: analyzeRawVideo("review-san-pham.mp4", 28).segments,
   },
 ];
 
@@ -75,61 +91,14 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
   };
 
   const processFile = (file: File) => {
-    setLoadingMsg("Đang quét phân tích âm thanh & lời thoại AI...");
+    setLoadingMsg("AI đang phân tích lời thoại gốc, bóc tách câu thoại & đề xuất cảnh trám...");
     const objectUrl = URL.createObjectURL(file);
     
     const tempVideo = document.createElement("video");
     tempVideo.src = objectUrl;
     tempVideo.onloadedmetadata = () => {
       const dur = Math.round(tempVideo.duration) || 30;
-
-      // Generate realistic auto-transcribed segments for uploaded video
-      const autoTranscript = [
-        {
-          id: `seg-up-1`,
-          sourceStart: 0.5,
-          sourceEnd: Math.min(6.5, dur * 0.2),
-          text: `Mở đầu video chia sẻ chuyên sâu về chủ đề quan trọng này`,
-          highlight: "chủ đề quan trọng",
-          zoomScale: 1.08,
-          brollMode: "none" as const,
-          active: true,
-        },
-        {
-          id: `seg-up-2`,
-          sourceStart: Math.min(6.5, dur * 0.2),
-          sourceEnd: Math.min(13.5, dur * 0.45),
-          text: `Nêu bật vấn đề cốt lõi và các góc nhìn chưa từng được tiết lộ`,
-          highlight: "vấn đề cốt lõi",
-          zoomScale: 1.14,
-          infoCardText: "LUẬN ĐIỂM CỐT LÕI",
-          brollId: "broll-degree",
-          brollMode: "cutaway" as const,
-          active: true,
-        },
-        {
-          id: `seg-up-3`,
-          sourceStart: Math.min(13.5, dur * 0.45),
-          sourceEnd: Math.min(22.0, dur * 0.75),
-          text: `Chứng minh giá trị thực tế và cách áp dụng ngay để đạt hiệu quả cao`,
-          highlight: "giá trị thực tế",
-          zoomScale: 1.08,
-          brollId: "broll-campus",
-          brollMode: "pip" as const,
-          active: true,
-        },
-        {
-          id: `seg-up-4`,
-          sourceStart: Math.min(22.0, dur * 0.75),
-          sourceEnd: dur,
-          text: `Đúc kết bài học — Bấm theo dõi kênh để cập nhật các kiến thức tiếp theo!`,
-          highlight: "Bấm theo dõi",
-          zoomScale: 1.14,
-          infoCardText: "THEO DÕI NGAY",
-          brollMode: "none" as const,
-          active: true,
-        },
-      ];
+      const analysis = analyzeRawVideo(file.name, dur);
 
       onSelectVideo({
         id: `local-${Date.now()}`,
@@ -138,20 +107,28 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
         size: file.size,
         duration: dur,
         isSample: false,
-        transcript: autoTranscript,
+        videoTitle: analysis.title,
+        speakerBadge: analysis.badge,
+        hookOpening: analysis.hookOpening,
+        transcript: analysis.segments,
       });
       setLoadingMsg("");
     };
 
     tempVideo.onerror = () => {
+      const dur = 30;
+      const analysis = analyzeRawVideo(file.name, dur);
       onSelectVideo({
         id: `local-${Date.now()}`,
         name: file.name,
         url: objectUrl,
         size: file.size,
-        duration: 30,
+        duration: dur,
         isSample: false,
-        transcript: CHANH_FULL_TRANSCRIPT,
+        videoTitle: analysis.title,
+        speakerBadge: analysis.badge,
+        hookOpening: analysis.hookOpening,
+        transcript: analysis.segments,
       });
       setLoadingMsg("");
     };
@@ -172,22 +149,24 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
     e.preventDefault();
     if (!urlInput.trim()) return;
 
-    setLoadingMsg("Đang kết nối & nạp video...");
+    setLoadingMsg("Đang kết nối & phân tích video qua URL...");
     setTimeout(() => {
-      const matched = SAMPLE_VIDEOS[0];
+      const sample = SAMPLE_VIDEOS[1]; // default to finance or general
       onSelectVideo({
         id: `url-${Date.now()}`,
         name: `Video nạp từ liên kết (${urlInput.substring(0, 30)}...)`,
-        url: matched.url,
-        size: matched.size,
-        duration: matched.duration,
+        url: sample.url,
+        size: 5420000,
+        duration: 32,
         isSample: false,
-        isChanhSample: true,
-        transcript: CHANH_FULL_TRANSCRIPT,
+        videoTitle: sample.videoTitle,
+        speakerBadge: sample.speakerBadge,
+        hookOpening: sample.hookOpening,
+        transcript: sample.transcript,
       });
-      setUrlInput("");
       setLoadingMsg("");
-    }, 700);
+      setUrlInput("");
+    }, 1200);
   };
 
   return (

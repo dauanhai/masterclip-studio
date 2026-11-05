@@ -1,17 +1,17 @@
 export type AspectRatio = "9:16" | "16:9" | "1:1" | "4:5";
 
-export type TransitionType = 
-  | "zoom-punch" 
-  | "flash-cut" 
-  | "glitch" 
-  | "whip-pan" 
+export type TransitionType =
+  | "zoom-punch"
+  | "flash-cut"
+  | "glitch"
+  | "whip-pan"
   | "film-dissolve";
 
-export type VfxType = 
-  | "shake" 
-  | "flash" 
-  | "korean-glow" 
-  | "film-grain" 
+export type VfxType =
+  | "shake"
+  | "flash"
+  | "korean-glow"
+  | "film-grain"
   | "rgb-split";
 
 export interface Asset3DTrigger {
@@ -82,6 +82,9 @@ export interface VideoSource {
   isSample?: boolean;
   isChanhSample?: boolean;
   transcript?: TranscriptSegment[];
+  videoTitle?: string;
+  speakerBadge?: string;
+  hookOpening?: string;
 }
 
 export interface AdvancedSettingsConfig {

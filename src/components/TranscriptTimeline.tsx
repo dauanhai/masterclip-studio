@@ -14,7 +14,10 @@ import {
   Eye, 
   Video,
   Wand2,
-  Trash2
+  Trash2,
+  ClipboardPaste,
+  Type,
+  BadgeAlert
 } from "lucide-react";
 import { TranscriptSegment, BrollItem } from "../types";
 import { formatTime } from "../lib/utils";
@@ -23,6 +26,11 @@ interface TranscriptTimelineProps {
   segments: TranscriptSegment[];
   brollList: BrollItem[];
   currentPlayTime: number;
+  videoTitle: string;
+  speakerBadge: string;
+  onChangeTitle: (title: string) => void;
+  onChangeBadge: (badge: string) => void;
+  onApplyCustomScript: (scriptText: string) => void;
   onUpdateSegment: (updated: TranscriptSegment) => void;
   onSeek: (time: number) => void;
   onAutoAssignBroll: () => void;
@@ -33,6 +41,11 @@ export const TranscriptTimeline: React.FC<TranscriptTimelineProps> = ({
   segments,
   brollList,
   currentPlayTime,
+  videoTitle,
+  speakerBadge,
+  onChangeTitle,
+  onChangeBadge,
+  onApplyCustomScript,
   onUpdateSegment,
   onSeek,
   onAutoAssignBroll,
@@ -40,6 +53,8 @@ export const TranscriptTimeline: React.FC<TranscriptTimelineProps> = ({
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [customBrollNotice, setCustomBrollNotice] = useState<string | null>(null);
+  const [showPasteModal, setShowPasteModal] = useState(false);
+  const [rawPastedScript, setRawPastedScript] = useState("");
 
   const handleFileBroll = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,9 +65,65 @@ export const TranscriptTimeline: React.FC<TranscriptTimelineProps> = ({
     }
   };
 
+  const handleApplyScript = () => {
+    if (!rawPastedScript.trim()) return;
+    onApplyCustomScript(rawPastedScript);
+    setShowPasteModal(false);
+    setRawPastedScript("");
+    setCustomBrollNotice("Đã đồng bộ toàn bộ lời thoại mới theo kịch bản!");
+    setTimeout(() => setCustomBrollNotice(null), 3000);
+  };
+
   return (
     <div className="rounded-2xl border border-zinc-800 bg-card/90 p-5 shadow-2xl backdrop-blur-sm space-y-4">
-      {/* Header bar */}
+      {/* Dynamic Header Information: Video Title & Speaker Badge */}
+      <div className="rounded-xl border border-pink-500/30 bg-pink-950/20 p-3.5 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="flex size-6 items-center justify-center rounded-lg bg-pink-500/30 text-pink-400 font-bold text-xs">
+              ✦
+            </span>
+            <h4 className="text-xs font-black text-white uppercase tracking-wider">
+              Nội dung & Định danh video đang biên tập
+            </h4>
+          </div>
+          <span className="text-[10px] text-pink-400/90 font-medium">
+            (Tự động điều chỉnh theo từng video thô hoặc sửa trực tiếp bên dưới)
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          {/* Speaker Badge */}
+          <div className="sm:col-span-4 space-y-1">
+            <label className="text-[10px] font-bold text-zinc-400 flex items-center gap-1">
+              <BadgeAlert className="size-3 text-pink-400" /> Huy hiệu người nói:
+            </label>
+            <input
+              type="text"
+              value={speakerBadge}
+              onChange={(e) => onChangeBadge(e.target.value)}
+              placeholder="VD: CÔ HẠNH CHIA SẺ, CHUYÊN GIA..."
+              className="w-full rounded-lg border border-zinc-700 bg-black/70 px-3 py-1.5 text-xs font-black uppercase text-pink-300 outline-none focus:border-pink-500"
+            />
+          </div>
+
+          {/* Video Title */}
+          <div className="sm:col-span-8 space-y-1">
+            <label className="text-[10px] font-bold text-zinc-400 flex items-center gap-1">
+              <Type className="size-3 text-pink-400" /> Tiêu đề nổi bật (Headline Plate):
+            </label>
+            <input
+              type="text"
+              value={videoTitle}
+              onChange={(e) => onChangeTitle(e.target.value)}
+              placeholder="Nhập tiêu đề xuất bản cho video này..."
+              className="w-full rounded-lg border border-zinc-700 bg-black/70 px-3 py-1.5 text-xs font-bold text-white outline-none focus:border-pink-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Control bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-3">
         <div>
           <div className="flex items-center gap-2">
@@ -60,19 +131,27 @@ export const TranscriptTimeline: React.FC<TranscriptTimelineProps> = ({
               <FileText className="size-4" />
             </div>
             <h3 className="text-sm font-extrabold text-white">
-              Toàn Bộ Lời Thoại Gốc & Điều Phối Cảnh Trám (B-Roll)
+              Toàn Bộ Lời Thoại Gốc & Điều Phối Cảnh Trám ({segments.length} câu)
             </h3>
           </div>
           <p className="text-[11px] text-zinc-400 mt-0.5">
-            Nắm trọn từng câu nói, tùy biến từ khóa phóng to, góc zoom punch-in và chèn cảnh trám tư liệu
+            Bám sát từng giây theo lời thoại video gốc, tùy chọn cảnh trám minh họa cho từng luận điểm
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setShowPasteModal(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-panel px-3 py-1.5 text-xs font-bold text-zinc-200 hover:border-pink-500 hover:text-white transition-all"
+          >
+            <ClipboardPaste className="size-3.5 text-pink-400" />
+            <span>Dán kịch bản thoại</span>
+          </button>
+
           <label className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-panel px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-zinc-500 hover:text-white cursor-pointer transition-all">
-            <Upload className="size-3.5 text-pink-400" />
-            <span>Thêm cảnh trám riêng (.mp4)</span>
+            <Upload className="size-3.5 text-emerald-400" />
+            <span>Thêm cảnh trám (.mp4)</span>
             <input
               type="file"
               accept="video/*,image/*"
@@ -98,11 +177,51 @@ export const TranscriptTimeline: React.FC<TranscriptTimelineProps> = ({
         </div>
       )}
 
+      {/* Paste Script Modal */}
+      {showPasteModal && (
+        <div className="rounded-xl border border-pink-500/50 bg-black/90 p-4 space-y-3 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-black text-pink-400 uppercase tracking-wide flex items-center gap-1.5">
+              <ClipboardPaste className="size-4" /> Dán Toàn Bộ Lời Thoại Gốc Của Video
+            </h4>
+            <button
+              onClick={() => setShowPasteModal(false)}
+              className="text-xs text-zinc-400 hover:text-white"
+            >
+              Đóng
+            </button>
+          </div>
+          <p className="text-[11px] text-zinc-400">
+            Dán kịch bản hoặc lời thoại (mỗi câu một dòng). AI sẽ tự động tính toán thời gian, tạo nhịp cắt và gán cảnh trám phù hợp:
+          </p>
+          <textarea
+            rows={5}
+            value={rawPastedScript}
+            onChange={(e) => setRawPastedScript(e.target.value)}
+            placeholder="Dán câu thoại vào đây, ví dụ:&#10;Hôm nay tôi chia sẻ cho các bạn 3 bí quyết quan trọng nhất...&#10;Sai lầm phổ biến khiến hầu hết mọi người thất bại...&#10;Cách xử lý triệt để trong 3 bước thực chiến..."
+            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-zinc-200 outline-none focus:border-pink-500 font-mono"
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setShowPasteModal(false)}
+              className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 hover:text-white"
+            >
+              Hủy
+            </button>
+            <button
+              onClick={handleApplyScript}
+              className="rounded-lg bg-pink-500 px-4 py-1.5 text-xs font-bold text-white hover:bg-pink-400"
+            >
+              Áp Dụng Lời Thoại Này
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Segments List */}
       <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
         {segments.map((seg, idx) => {
           const isCurrent = currentPlayTime >= seg.sourceStart && currentPlayTime <= seg.sourceEnd;
-          const assignedBroll = brollList.find((b) => b.id === seg.brollId);
 
           return (
             <div
@@ -215,7 +334,7 @@ export const TranscriptTimeline: React.FC<TranscriptTimelineProps> = ({
                     type="text"
                     value={seg.infoCardText || ""}
                     onChange={(e) => onUpdateSegment({ ...seg, infoCardText: e.target.value })}
-                    placeholder="VD: BẰNG CHÍNH QUY..."
+                    placeholder="VD: LUẬN ĐIỂM CHỨNG MINH..."
                     className="rounded bg-black/60 border border-zinc-800 px-2 py-0.5 text-[10px] font-bold text-amber-300 outline-none focus:border-amber-400 max-w-[150px]"
                   />
                 </div>
