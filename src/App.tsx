@@ -141,13 +141,18 @@ export function App() {
     const badge = v.speakerBadge || analysis.badge;
     const segs = v.transcript && v.transcript.length > 0 ? v.transcript : analysis.segments;
 
-    setPendingVideo(v);
-    setPendingAnalysis({
-      title,
-      badge,
-      segments: segs,
-    });
-    setShowTranscriptionModal(true);
+    const updated: VideoSource = {
+      ...v,
+      videoTitle: title,
+      speakerBadge: badge,
+      transcript: segs,
+    };
+    setCurrentVideo(updated);
+    setVideoTitle(title);
+    setSpeakerBadge(badge);
+    setSegments(segs);
+    setHasRenderedOutput(false);
+    setShowTranscriptionModal(false);
   };
 
   const handleConfirmTranscription = (data: {
@@ -738,7 +743,7 @@ export function App() {
       {/* AI Speech-to-Text Transcription Modal (Bước 1: Trích xuất lời thoại gốc) */}
       {pendingVideo && pendingAnalysis && (
         <TranscriptionModal
-          isOpen={showTranscriptionModal}
+          isOpen={false}
           video={pendingVideo}
           initialTitle={pendingAnalysis.title}
           initialBadge={pendingAnalysis.badge}
